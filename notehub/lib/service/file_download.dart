@@ -61,10 +61,10 @@ class FileDownload {
     );
     final notificationDetails = NotificationDetails(android: androidDetails);
     await flutterLocalNotificationsPlugin.show(
-      0,
-      'Downloading',
-      '$progress%',
-      notificationDetails,
+      id: 0,
+      title: 'Downloading',
+      body: '$progress%',
+      notificationDetails: notificationDetails,
     );
   }
 
@@ -80,10 +80,10 @@ class FileDownload {
     );
     const notificationDetails = NotificationDetails(android: androidDetails);
     await flutterLocalNotificationsPlugin.show(
-      0,
-      'Download Complete',
-      'The file has been downloaded successfully',
-      notificationDetails,
+      id: 0,
+      title: 'Download Complete',
+      body: 'The file has been downloaded successfully',
+      notificationDetails: notificationDetails,
       payload: savePath,
     );
   }

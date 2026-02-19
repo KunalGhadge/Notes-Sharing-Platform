@@ -37,7 +37,7 @@ class _DocumentState extends State<Document> {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: android);
     await flutterLocalNotificationsPlugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         FileDownload.onNotificationClick(response.payload);
       },

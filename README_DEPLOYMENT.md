@@ -77,6 +77,13 @@ Once finished, Flutter will tell you where the file is. Usually, it is here:
 
 ---
 
+## Security Note
+The Supabase URL and Anon Key are currently in `lib/core/meta/app_meta.dart`. For a production environment, it is highly recommended to:
+1. Move these to a `.env` file or use `--dart-define` during the build process.
+2. Ensure Row Level Security (RLS) is strictly enforced in Supabase (the provided `SUPABASE_SCHEMA.sql` includes initial RLS policies).
+
+---
+
 ## Troubleshooting Tips
 - **App doesn't load feed?** Double-check your Supabase URL and Anon Key in `lib/core/meta/app_meta.dart`.
 - **Upload fails?** Ensure the `documents` bucket exists in Supabase Storage and is set to **Public**.

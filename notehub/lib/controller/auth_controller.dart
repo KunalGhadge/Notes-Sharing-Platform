@@ -117,14 +117,26 @@ class AuthController extends GetxController {
   }
 
   Future<Map<String, int>> getCounts(String userId) async {
-    final docs = await supabase.from('documents').select('id').eq('user_id', userId);
-    final followers = await supabase.from('follows').select('follower_id').eq('following_id', userId);
-    final following = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+    final docsRes = await supabase
+        .from('documents')
+        .select('id')
+        .eq('user_id', userId)
+        .count(CountOption.exact);
+    final followersRes = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', userId)
+        .count(CountOption.exact);
+    final followingRes = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', userId)
+        .count(CountOption.exact);
 
     return {
-      'documents': (docs as List).length,
-      'followers': (followers as List).length,
-      'following': (following as List).length,
+      'documents': docsRes.count,
+      'followers': followersRes.count,
+      'following': followingRes.count,
     };
   }
 
