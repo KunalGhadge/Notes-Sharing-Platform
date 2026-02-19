@@ -13,7 +13,7 @@ class BottomFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 70,
-      margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -21,12 +21,12 @@ class BottomFooter extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             spreadRadius: 2,
-            blurRadius: 10,
+            blurRadius: 15,
             offset: const Offset(0, 5),
           )
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: GetX<BottomNavigationController>(
         builder: (controller) {
           return Row(
@@ -39,12 +39,17 @@ class BottomFooter extends StatelessWidget {
                 onTap: () => controller.currentPage.value = 0,
               ),
               _buildNavItem(
-                icon: Icons.add_box_rounded,
+                icon: Icons.search_rounded,
                 isSelected: controller.currentPage.value == 1,
                 onTap: () => controller.currentPage.value = 1,
               ),
-              GestureDetector(
+              _buildNavItem(
+                icon: Icons.add_circle_outline_rounded,
+                isSelected: controller.currentPage.value == 2,
                 onTap: () => controller.currentPage.value = 2,
+              ),
+              GestureDetector(
+                onTap: () => controller.currentPage.value = 3,
                 child: Obx(() {
                   final profileController = Get.find<ProfileController>();
                   return Container(
@@ -52,7 +57,7 @@ class BottomFooter extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: controller.currentPage.value == 2
+                        color: controller.currentPage.value == 3
                             ? PrimaryColor.shade500
                             : Colors.transparent,
                         width: 2,
@@ -60,9 +65,8 @@ class BottomFooter extends StatelessWidget {
                     ),
                     child: CustomAvatar(
                       radius: 14,
-                      path: profileController.user.value.profile == "NA"
-                          ? "${AppMetaData.avatar_url}&name=${profileController.user.value.displayName}"
-                          : profileController.user.value.profile,
+                      name: profileController.user.value.displayName,
+                      path: profileController.user.value.profile,
                     ),
                   );
                 }),
@@ -90,7 +94,7 @@ class BottomFooter extends StatelessWidget {
         child: Icon(
           icon,
           color: isSelected ? PrimaryColor.shade500 : Colors.grey,
-          size: 28,
+          size: 26,
         ),
       ),
     );

@@ -4,6 +4,8 @@ import 'package:notehub/controller/profile_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
 import 'package:notehub/core/meta/app_meta.dart';
+import 'package:notehub/view/notification_screen/notifications.dart';
+import 'package:notehub/view/search_screen/search.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
@@ -11,79 +13,94 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetX<ProfileController>(
-      builder: (controller) => Container(
-        margin: const EdgeInsets.symmetric(vertical: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: AppGradients.premiumGradient,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: PrimaryColor.shade500.withOpacity(0.2),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+      builder: (controller) => Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: AppGradients.premiumGradient,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: PrimaryColor.shade500.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _renderAvatar(controller),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text(
-                          "Hello,",
-                          style: AppTypography.subHead2.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                        ),
-                        Text(
-                          controller.user.value.displayName,
-                          style: AppTypography.heading6.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        _renderAvatar(controller),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Hello,",
+                              style: AppTypography.subHead2.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                            Text(
+                              controller.user.value.displayName,
+                              style: AppTypography.heading6.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Get.to(() => SearchView()),
+                          icon: const Icon(Icons.search, color: Colors.white),
+                        ),
+                        GestureDetector(
+                          onTap: () => Get.to(() => NotificationView()),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.notifications_none, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
                 ),
+                const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.notifications_none, color: Colors.white),
-                )
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Mumbai University Community",
+                        style: AppTypography.subHead3.copyWith(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Mumbai University Community",
-                    style: AppTypography.subHead3.copyWith(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

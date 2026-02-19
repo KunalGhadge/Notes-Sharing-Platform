@@ -64,23 +64,26 @@ class DocDescription extends StatelessWidget {
     return GetBuilder<DocumentController>(
       builder: (controller) => Row(
         children: [
-          GestureDetector(
+          _interactionButton(
+            icon: document.isLiked ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+            count: document.likes,
+            color: document.isLiked ? Colors.blue : Colors.grey,
             onTap: () => controller.toggleLike(document),
-            child: Icon(
-              document.isLiked ? Icons.favorite : Icons.favorite_border,
-              color: document.isLiked ? Colors.red : Colors.grey,
-              size: 30,
-            ),
           ),
-          const SizedBox(width: 8),
-          Text("${document.likes}", style: AppTypography.body1),
+          const SizedBox(width: 16),
+          _interactionButton(
+            icon: document.isDisliked ? Icons.thumb_down_rounded : Icons.thumb_down_outlined,
+            count: document.dislikes,
+            color: document.isDisliked ? Colors.orange : Colors.grey,
+            onTap: () => controller.toggleDislike(document),
+          ),
           const SizedBox(width: 24),
           GestureDetector(
             onTap: () => controller.toggleBookmark(document),
             child: Icon(
               document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
               color: document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
-              size: 30,
+              size: 28,
             ),
           ),
           const Spacer(),
@@ -95,6 +98,19 @@ class DocDescription extends StatelessWidget {
               style: AppTypography.body4.copyWith(color: PrimaryColor.shade900),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _interactionButton({required IconData icon, required int count, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 6),
+          Text(count.toString(), style: AppTypography.body2.copyWith(color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );

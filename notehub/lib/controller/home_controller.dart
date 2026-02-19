@@ -20,54 +20,62 @@ class HomeController extends GetxController {
           .select('''
             *,
             profiles:user_id (id, username, display_name, profile_url),
-            likes:likes(user_id),
+            interactions:interactions(user_id, type),
             bookmarks:bookmarks(user_id)
           ''')
           .order('created_at', ascending: false)
           .limit(50);
 
-      updates.clear();
-      final List<DocumentModel> tmp = [];
-
-      final currentUserId = HiveBoxes.userId;
-
-      for (var doc in response) {
-        final profile = doc['profiles'];
-
-        final List likes = doc['likes'] ?? [];
-        final List bookmarks = doc['bookmarks'] ?? [];
-
-        final isLiked = likes.any((l) => l['user_id'] == currentUserId);
-        final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
-
-        tmp.add(DocumentModel(
-          documentId: doc['id'].toString(),
-          username: profile['username'],
-          displayName: profile['display_name'] ?? "User",
-          profile: profile['profile_url'] ?? "NA",
-          isFollowedByUser: false,
-          name: doc['name'],
-          topic: doc['topic'] ?? "",
-          description: doc['description'] ?? "",
-          likes: doc['likes_count'] ?? 0,
-          icon: doc['cover_url'] ?? "",
-          iconName: "cover",
-          dateOfUpload: DateTime.parse(doc['created_at']),
-          documentName: doc['document_name'] ?? "document",
-          document: doc['document_url'],
-          isLiked: isLiked,
-          isBookmarked: isBookmarked,
-          isExternal: doc['is_external'] ?? false,
-        ));
-      }
-
-      updates.value = tmp;
+      updates.value = _mapDocuments(response);
       update();
     } catch (e) {
-      print("HomeController: Error in fetching updates: ${e.toString()}");
-      Toasts.showTostError(message: "Error fetching documents");
+      print("HomeController Error: $e");
+      Toasts.showTostError(message: "We're currently unable to refresh the feed. Please check your connection.");
     } finally {
       isLoading.value = false;
     }
+  }
+
+  List<DocumentModel> _mapDocuments(dynamic response) {
+    final List<DocumentModel> tmp = [];
+    final currentUserId = HiveBoxes.userId;
+
+    for (var doc in response) {
+      final profile = doc['profiles'];
+      final List interactions = doc['interactions'] ?? [];
+      final List bookmarks = doc['bookmarks'] ?? [];
+
+      final interaction = interactions.firstWhere(
+        (i) => i['user_id'] == currentUserId,
+        orElse: () => null
+      );
+
+      final isLiked = interaction != null && interaction['type'] == 'like';
+      final isDisliked = interaction != null && interaction['type'] == 'dislike';
+      final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
+
+      tmp.add(DocumentModel(
+        documentId: doc['id'].toString(),
+        username: profile['username'],
+        displayName: profile['display_name'] ?? "User",
+        profile: profile['profile_url'] ?? "NA",
+        isFollowedByUser: false,
+        name: doc['name'],
+        topic: doc['topic'] ?? "",
+        description: doc['description'] ?? "",
+        likes: doc['likes_count'] ?? 0,
+        dislikes: doc['dislikes_count'] ?? 0,
+        icon: doc['cover_url'] ?? "",
+        iconName: "cover",
+        dateOfUpload: DateTime.parse(doc['created_at']),
+        documentName: doc['document_name'] ?? "document",
+        document: doc['document_url'],
+        isLiked: isLiked,
+        isDisliked: isDisliked,
+        isBookmarked: isBookmarked,
+        isExternal: doc['is_external'] ?? false,
+      ));
+    }
+    return tmp;
   }
 }

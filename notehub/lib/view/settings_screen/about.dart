@@ -10,7 +10,7 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("About"),
+        title: const Text("About Serious Study"),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -34,18 +34,19 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               "Mumbai University Student Community",
+              textAlign: TextAlign.center,
               style: AppTypography.subHead1.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 40),
             _buildSection(
               title: "Our Vision",
-              content: "A dedicated community where students and their seniors guide each other by providing quality notes, Previous Year Questions (PYQs), and Important Questions (IMPs).",
+              content: "A dedicated community where Mumbai University students and seniors guide each other by sharing quality notes, PYQs (Previous Year Questions), and IMPs (Important Questions). We aim to make studying more accessible and collaborative for everyone.",
               icon: Icons.visibility_rounded,
             ),
             const SizedBox(height: 24),
             _buildSection(
-              title: "Developers",
-              content: "Kunal\nSharonRaj",
+              title: "Meet the Developers",
+              content: "Built with passion by Kunal and SharonRaj. We are committed to empowering students through technology and community-driven learning.",
               icon: Icons.code_rounded,
             ),
             const SizedBox(height: 40),
@@ -84,7 +85,7 @@ class AboutPage extends StatelessWidget {
               children: [
                 Text(title, style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text(content, style: AppTypography.body2.copyWith(color: Colors.grey[700])),
+                Text(content, style: AppTypography.body2.copyWith(color: Colors.grey[700], height: 1.5)),
               ],
             ),
           ),

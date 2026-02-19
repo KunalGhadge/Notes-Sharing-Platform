@@ -37,28 +37,29 @@ class UploadController extends GetxController {
 
   Future<void> uploadDocument() async {
     if (nameEditingController.text.isEmpty || topicEditingController.text.isEmpty) {
-      Toasts.showTostWarning(message: "Please fill all required fields");
+      Toasts.showTostWarning(message: "All major fields are required for quality community notes.");
       return;
     }
 
     if (isExternalLink.value) {
       if (linkEditingController.text.isEmpty) {
-        Toasts.showTostWarning(message: "Please provide a link");
+        Toasts.showTostWarning(message: "Please provide a valid external resource link.");
         return;
       }
     } else {
       if (selectedDocument.value == null) {
-        Toasts.showTostWarning(message: "Please select a document");
+        Toasts.showTostWarning(message: "Please select a document to upload.");
         return;
       }
+      // 10MB Limit Check
       if (selectedDocument.value!.size > 10 * 1024 * 1024) {
-        Toasts.showTostWarning(message: "Direct upload limit is 10MB. Use a Drive link for larger files.");
+        Toasts.showTostWarning(message: "This file exceeds our 10MB direct upload limit. To help us stay free, please use a Google Drive or Mega link instead.");
         return;
       }
     }
 
     if (selectedCover.value == null) {
-      Toasts.showTostWarning(message: "Please select a cover image");
+      Toasts.showTostWarning(message: "A cover image helps others find your notes easily.");
       return;
     }
 
@@ -72,11 +73,22 @@ class UploadController extends GetxController {
       File? compressedCover = await ImageHelper.compressImage(coverFile);
 
       final coverPath = '$userId/covers/${timestamp}_${nameEditingController.text}.jpg';
-      await supabase.storage.from('documents').upload(
-        coverPath,
-        compressedCover ?? coverFile,
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
+
+      try {
+        await supabase.storage.from('documents').upload(
+          coverPath,
+          compressedCover ?? coverFile,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+      } on StorageException catch (e) {
+        if (e.statusCode == '413') {
+          Toasts.showTostError(message: "Storage limit reached. Please use the 'External Link' option for now.");
+        } else {
+          rethrow;
+        }
+        return;
+      }
+
       final coverUrl = supabase.storage.from('documents').getPublicUrl(coverPath);
 
       String docUrl = "";
@@ -84,13 +96,24 @@ class UploadController extends GetxController {
 
       if (isExternalLink.value) {
         docUrl = linkEditingController.text.trim();
-        docName = "External Link";
+        docName = "External Resource";
       } else {
         // 2. Upload Document
         final docFile = File(selectedDocument.value!.path!);
         final docExt = p.extension(docFile.path);
         final docPath = '$userId/docs/${timestamp}_${nameEditingController.text}$docExt';
-        await supabase.storage.from('documents').upload(docPath, docFile);
+
+        try {
+          await supabase.storage.from('documents').upload(docPath, docFile);
+        } on StorageException catch (e) {
+           if (e.statusCode == '413') {
+             Toasts.showTostError(message: "Direct storage is currently at capacity. Sharing via a link is recommended.");
+           } else {
+             rethrow;
+           }
+           return;
+        }
+
         docUrl = supabase.storage.from('documents').getPublicUrl(docPath);
         docName = selectedDocument.value!.name;
       }
@@ -107,12 +130,12 @@ class UploadController extends GetxController {
         'is_external': isExternalLink.value,
       });
 
-      Toasts.showTostSuccess(message: "Document shared successfully!");
+      Toasts.showTostSuccess(message: "Your contribution has been shared with the community!");
       clearForm();
       Get.back();
     } catch (e) {
       print("Upload error: $e");
-      Toasts.showTostError(message: "Failed to upload document");
+      Toasts.showTostError(message: "We encountered an issue while saving your notes. Please try again in a moment.");
     } finally {
       isLoading.value = false;
     }

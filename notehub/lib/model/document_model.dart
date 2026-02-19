@@ -12,10 +12,12 @@ class DocumentModel {
   String icon;
   String iconName;
   int likes;
+  int dislikes;
   DateTime dateOfUpload;
   String documentName;
   String document;
   bool isLiked;
+  bool isDisliked;
   bool isBookmarked;
   bool isExternal;
 
@@ -29,12 +31,14 @@ class DocumentModel {
     required this.description,
     required this.documentId,
     required this.likes,
+    this.dislikes = 0,
     required this.icon,
     required this.iconName,
     required this.dateOfUpload,
     required this.documentName,
     required this.document,
     this.isLiked = false,
+    this.isDisliked = false,
     this.isBookmarked = false,
     this.isExternal = false,
   });

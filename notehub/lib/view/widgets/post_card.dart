@@ -11,18 +11,13 @@ import "package:notehub/view/document_screen/document.dart";
 import "package:notehub/view/profile_screen/profile_user.dart";
 import "package:notehub/view/widgets/loader.dart";
 
-class PostCard extends StatefulWidget {
+class PostCard extends StatelessWidget {
   final DocumentModel document;
   const PostCard({
     super.key,
     required this.document,
   });
 
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
-
-class _PostCardState extends State<PostCard> {
   @override
   Widget build(context) {
     return Container(
@@ -45,7 +40,7 @@ class _PostCardState extends State<PostCard> {
           _renderHeader(),
           GestureDetector(
             onTap: () => Get.to(
-              () => Document(document: widget.document),
+              () => Document(document: document),
               transition: Transition.rightToLeft,
             ),
             child: _renderImage(),
@@ -64,19 +59,19 @@ class _PostCardState extends State<PostCard> {
         children: [
           GestureDetector(
             onTap: () => Get.to(
-              () => ProfileUser(username: widget.document.username),
+              () => ProfileUser(username: document.username),
               transition: Transition.rightToLeft,
             ),
             child: Row(
               children: [
-                CustomAvatar(path: widget.document.profile),
+                CustomAvatar(path: document.profile, name: document.displayName),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.document.displayName,
+                    Text(document.displayName,
                         style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
-                    Text(widget.document.topic, style: AppTypography.body4.copyWith(color: PrimaryColor.shade500)),
+                    Text(document.topic, style: AppTypography.body4.copyWith(color: PrimaryColor.shade500)),
                   ],
                 ),
               ],
@@ -100,7 +95,7 @@ class _PostCardState extends State<PostCard> {
               height: 250,
               width: Get.width,
               fit: BoxFit.cover,
-              imageUrl: widget.document.icon,
+              imageUrl: document.icon,
               placeholder: (context, url) => const Loader(),
               errorWidget: (context, url, error) => Container(
                 height: 250,
@@ -127,11 +122,13 @@ class _PostCardState extends State<PostCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.document.name,
+                          document.name,
                           style: AppTypography.subHead2.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (document.isExternal)
+                        const Icon(Icons.link_rounded, color: Colors.white, size: 20),
                     ],
                   ),
                 ),
@@ -149,32 +146,48 @@ class _PostCardState extends State<PostCard> {
         padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: () => controller.toggleLike(widget.document),
-              child: Icon(
-                widget.document.isLiked ? Icons.favorite : Icons.favorite_border,
-                color: widget.document.isLiked ? Colors.red : Colors.grey,
-                size: 28,
-              ),
+            _interactionItem(
+              icon: document.isLiked ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+              count: document.likes,
+              color: document.isLiked ? Colors.blue : Colors.grey,
+              onTap: () => controller.toggleLike(document),
             ),
-            const SizedBox(width: 6),
-            Text("${widget.document.likes}", style: AppTypography.body1),
+            const SizedBox(width: 16),
+            _interactionItem(
+              icon: document.isDisliked ? Icons.thumb_down_rounded : Icons.thumb_down_outlined,
+              count: document.dislikes,
+              color: document.isDisliked ? Colors.orange : Colors.grey,
+              onTap: () => controller.toggleDislike(document),
+            ),
             const SizedBox(width: 20),
             GestureDetector(
-              onTap: () => controller.toggleBookmark(widget.document),
+              onTap: () => controller.toggleBookmark(document),
               child: Icon(
-                widget.document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                color: widget.document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
-                size: 28,
+                document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                color: document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
+                size: 26,
               ),
             ),
             const Spacer(),
             Text(
-              "MU Notes",
+              "MU Resources",
               style: AppTypography.body4.copyWith(color: Colors.grey),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _interactionItem({required IconData icon, required int count, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 4),
+          Text(count.toString(), style: AppTypography.body3.copyWith(color: color, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

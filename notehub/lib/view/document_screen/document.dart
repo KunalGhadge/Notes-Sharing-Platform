@@ -11,6 +11,7 @@ import 'package:notehub/model/document_model.dart';
 import 'package:notehub/service/file_download.dart';
 import 'package:notehub/view/document_screen/widget/doc_description.dart';
 import 'package:notehub/view/document_screen/widget/follow_button.dart';
+import 'package:notehub/view/document_screen/widget/comment_section.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/secondary_button.dart';
 
@@ -61,6 +62,10 @@ class _DocumentState extends State<Document> {
             DocDescription(document: widget.document),
             const SizedBox(height: 32),
             _renderDownloader(),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 24),
+            CommentSection(docId: widget.document.documentId),
             const SizedBox(height: 40),
           ],
         ),

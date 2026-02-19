@@ -7,6 +7,7 @@ import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/connection_screen/connection.dart';
 import 'package:notehub/view/profile_screen/widget/follower_widget.dart';
+import 'package:notehub/view/profile_screen/widget/edit_profile_dialog.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -131,6 +132,7 @@ class ButtonSection extends StatelessWidget {
         children: [
           Expanded(
             child: PrimaryButton(
+              onTap: () => Get.dialog(EditProfileDialog()),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Text(

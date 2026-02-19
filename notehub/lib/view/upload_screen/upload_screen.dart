@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/controller/upload_controller.dart';
-
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
-import 'package:notehub/core/helper/custom_icon.dart';
-
 import 'package:notehub/view/upload_screen/widget/upload_form.dart';
 import 'package:notehub/view/widgets/loader.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/secondary_button.dart';
+import 'package:notehub/view/widgets/toasts.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -23,19 +20,7 @@ class _UploadScreenState extends State<UploadScreen> {
   @override
   void initState() {
     super.initState();
-    loadData();
-  }
-
-  loadData() async {
     Get.put(UploadController());
-    Get.find<UploadController>().clearForm();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    Get.find<UploadController>().clearForm();
-    Get.find<UploadController>().dispose();
   }
 
   @override
@@ -45,42 +30,48 @@ class _UploadScreenState extends State<UploadScreen> {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.white,
         body: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: Stack(
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+              child: Column(
                 children: [
-                  Column(
-                    children: [
-                      CustomIcon(
-                        path: "assets/icons/cloud-upload.svg",
-                        size: 128,
-                        color: OtherColors.amethystPurple,
-                      ),
-                      Text("Upload a Note", style: AppTypography.heading8),
-                      const SizedBox(height: 48),
-                      const UploadForm(),
-                      const Spacer(),
-                      const UploadFooter()
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: PrimaryColor.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 80,
+                      color: PrimaryColor.shade500,
+                    ),
                   ),
+                  const SizedBox(height: 16),
+                  Text("Share Resources", style: AppTypography.heading6),
+                  Text(
+                    "Contribute to Mumbai University Community",
+                    style: AppTypography.body3.copyWith(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 32),
+                  const UploadForm(),
+                  const SizedBox(height: 32),
+                  const UploadFooter(),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
-            GetX<UploadController>(
-              builder: (controller) {
-                if (controller.isLoading.value) {
-                  return Positioned.fill(
-                    child: Container(
-                      color: GrayscaleWhiteColors.darkWhite.withOpacity(.5),
-                      child: const Center(child: Loader()),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+            Obx(
+              () => Get.find<UploadController>().isLoading.value
+                  ? Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(.3),
+                        child: const Center(child: Loader()),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ],
         ),
@@ -102,11 +93,12 @@ class UploadFooter extends StatelessWidget {
               Get.find<UploadController>().uploadDocument();
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 "Upload",
-                style: AppTypography.body2.copyWith(
-                  color: GrayscaleWhiteColors.white,
+                style: AppTypography.subHead2.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -116,13 +108,14 @@ class UploadFooter extends StatelessWidget {
         SecondaryButton(
           onTap: () {
             Get.find<UploadController>().clearForm();
+            Toasts.showTostSuccess(message: "Form cleared");
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: Text(
               "Clear",
-              style: AppTypography.body2.copyWith(
-                color: GrayscaleBlackColors.black,
+              style: AppTypography.subHead2.copyWith(
+                color: Colors.black,
               ),
             ),
           ),

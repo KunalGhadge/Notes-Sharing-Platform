@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/auth_screen/login.dart';
+import 'package:notehub/view/widgets/toasts.dart';
 
 class ProfileController extends GetxController {
   final supabase = Supabase.instance.client;
@@ -45,6 +46,25 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       print("Error fetching profile: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateProfile({String? name, String? institute, List<String>? interests}) async {
+    isLoading.value = true;
+    try {
+      final userId = HiveBoxes.userId;
+      await supabase.from('profiles').update({
+        if (name != null) 'display_name': name,
+        if (institute != null) 'institute': institute,
+        if (interests != null) 'academic_interests': interests,
+      }).eq('id', userId);
+
+      fetchUserData(username: HiveBoxes.username);
+      Toasts.showTostSuccess(message: "Profile updated successfully");
+    } catch (e) {
+      Toasts.showTostError(message: "Failed to update profile");
     } finally {
       isLoading.value = false;
     }

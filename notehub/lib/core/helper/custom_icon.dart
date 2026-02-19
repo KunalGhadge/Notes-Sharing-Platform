@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:notehub/core/meta/app_meta.dart';
 
 class CustomIcon extends StatelessWidget {
   final String path;
@@ -22,14 +23,21 @@ class CustomIcon extends StatelessWidget {
 
 class CustomAvatar extends StatelessWidget {
   final String path;
+  final String? name;
   final double? radius;
-  const CustomAvatar({super.key, required this.path, this.radius});
+  const CustomAvatar({super.key, required this.path, this.name, this.radius});
 
   @override
   Widget build(BuildContext context) {
+    String finalUrl = path;
+    if (path == "" || path == "NA") {
+      finalUrl = "${AppMetaData.avatar_url}&name=${name ?? 'User'}";
+    }
+
     return CircleAvatar(
       radius: radius,
-      backgroundImage: NetworkImage(path),
+      backgroundImage: NetworkImage(finalUrl),
+      backgroundColor: Colors.grey[200],
     );
   }
 }
