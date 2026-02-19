@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/controller/bottom_navigation_controller.dart';
 import 'package:notehub/controller/profile_controller.dart';
-
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/helper/custom_icon.dart';
 import 'package:notehub/core/meta/app_meta.dart';
@@ -14,69 +12,86 @@ class BottomFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
+      height: 70,
+      margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
       decoration: BoxDecoration(
-        color: GrayscaleWhiteColors.white,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: GrayscaleWhiteColors.darkWhite,
-            spreadRadius: 1,
-            blurRadius: 3,
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           )
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GetX<BottomNavigationController>(
         builder: (controller) {
           return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              GestureDetector(
-                onTap: () {
-                  controller.currentPage.value = 0;
-                  controller.update();
-                },
-                child: CustomIcon(
-                  path: "assets/icons/house.svg",
-                  color: controller.currentPage.value == 0
-                      ? GrayscaleBlackColors.black
-                      : GrayscaleGrayColors.shadedGray,
-                  size: controller.currentPage.value != 0 ? 25 : 27,
-                ),
+              _buildNavItem(
+                icon: Icons.home_rounded,
+                isSelected: controller.currentPage.value == 0,
+                onTap: () => controller.currentPage.value = 0,
+              ),
+              _buildNavItem(
+                icon: Icons.add_box_rounded,
+                isSelected: controller.currentPage.value == 1,
+                onTap: () => controller.currentPage.value = 1,
               ),
               GestureDetector(
-                onTap: () {
-                  controller.currentPage.value = 1;
-                  controller.update();
-                },
-                child: CustomIcon(
-                  path: "assets/icons/square-plus.svg",
-                  size: controller.currentPage.value != 1 ? 25 : 27,
-                  color: controller.currentPage.value == 1
-                      ? GrayscaleBlackColors.black
-                      : GrayscaleGrayColors.shadedGray,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  controller.currentPage.value = 2;
-                  controller.update();
-                },
-                child: CustomAvatar(
-                  radius: controller.currentPage.value != 2 ? 15 : 17,
-                  path: Get.find<ProfileController>()
-                              .profileData
-                              .value
-                              .profile ==
-                          "NA"
-                      ? "${AppMetaData.avatar_url}&name=${Get.find<ProfileController>().profileData.value.displayName}"
-                      : Get.find<ProfileController>().profileData.value.profile,
-                ),
+                onTap: () => controller.currentPage.value = 2,
+                child: Obx(() {
+                  final profileController = Get.find<ProfileController>();
+                  return Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: controller.currentPage.value == 2
+                            ? PrimaryColor.shade500
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: CustomAvatar(
+                      radius: 14,
+                      path: profileController.user.value.profile == "NA"
+                          ? "${AppMetaData.avatar_url}&name=${profileController.user.value.displayName}"
+                          : profileController.user.value.profile,
+                    ),
+                  );
+                }),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isSelected ? PrimaryColor.shade500.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? PrimaryColor.shade500 : Colors.grey,
+          size: 28,
+        ),
       ),
     );
   }

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/controller/profile_controller.dart';
-
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
-import 'package:notehub/core/helper/custom_icon.dart';
 import 'package:notehub/core/meta/app_meta.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -15,39 +12,76 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetX<ProfileController>(
       builder: (controller) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+        margin: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: GrayscaleWhiteColors.white,
+          gradient: AppGradients.premiumGradient,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: PrimaryColor.shade500.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _renderAvatar(controller),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      controller.profileData.value.displayName,
-                      style: AppTypography.heading8,
-                    ),
-                    Text(
-                      controller.profileData.value.username,
-                      style: AppTypography.subHead3.copyWith(
-                        color: GrayscaleBlackColors.lightBlack,
-                      ),
+                    _renderAvatar(controller),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Hello,",
+                          style: AppTypography.subHead2.copyWith(
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          controller.user.value.displayName,
+                          style: AppTypography.heading6.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.notifications_none, color: Colors.white),
+                )
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: CustomIcon(path: "assets/icons/bell.svg"),
-            )
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.location_on, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Mumbai University Community",
+                    style: AppTypography.subHead3.copyWith(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -55,12 +89,19 @@ class HomeHeader extends StatelessWidget {
   }
 
   _renderAvatar(ProfileController controller) {
-    return CircleAvatar(
-      radius: 24,
-      backgroundImage: NetworkImage(
-        controller.profileData.value.profile == "NA"
-            ? "${AppMetaData.avatar_url}&name=${controller.profileData.value.displayName}"
-            : controller.profileData.value.profile,
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: CircleAvatar(
+        radius: 26,
+        backgroundColor: Colors.white24,
+        backgroundImage: NetworkImage(
+          controller.user.value.profile == "NA"
+              ? "${AppMetaData.avatar_url}&name=${controller.user.value.displayName}"
+              : controller.user.value.profile,
+        ),
       ),
     );
   }

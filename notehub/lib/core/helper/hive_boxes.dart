@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-
 import 'package:notehub/model/user_model.dart';
 
 class HiveBoxes {
@@ -7,6 +6,10 @@ class HiveBoxes {
 
   static String get username => HiveBoxes.userBox.containsKey('data')
       ? userBox.get("data")!.username
+      : "";
+
+  static String get userId => HiveBoxes.userBox.containsKey('data')
+      ? userBox.get("data")!.id ?? ""
       : "";
 
   static setUser(UserModel newUser) async {

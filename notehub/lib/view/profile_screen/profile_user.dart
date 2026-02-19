@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/controller/profile_user_controller.dart';
 import 'package:notehub/controller/showcase_controller.dart';
-
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
-import 'package:notehub/core/helper/custom_icon.dart';
+import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/profile_screen/widget/follower_widget.dart';
-
 import 'package:notehub/view/profile_screen/widget/profile_showcase.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/refresher_widget.dart';
-import 'package:notehub/view/widgets/secondary_button.dart';
-
 import 'package:shimmer/shimmer.dart';
 
 class ProfileUser extends StatefulWidget {
@@ -29,13 +24,13 @@ class _ProfileUserState extends State<ProfileUser> {
   @override
   void initState() {
     super.initState();
-    Get.put(ProfileUserController());
+    Get.put(ProfileUserController(), tag: widget.username);
     Get.put(ShowcaseController(), tag: widget.username);
     loadUserData();
   }
 
   Future<void> loadUserData() async {
-    Get.find<ProfileUserController>().fetchUserData(username: widget.username);
+    Get.find<ProfileUserController>(tag: widget.username).fetchUserData(username: widget.username);
     Get.find<ShowcaseController>(tag: widget.username)
         .fetchProfilePosts(username: widget.username);
   }
@@ -43,31 +38,34 @@ class _ProfileUserState extends State<ProfileUser> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: PrimaryColor.shade500),
+      ),
+      extendBodyBehindAppBar: true,
       body: RefresherWidget(
         onRefresh: loadUserData,
         child: Column(
           children: [
             GetX<ProfileUserController>(
+              tag: widget.username,
               builder: (controller) {
                 if (controller.isLoading.value) {
                   return Shimmer.fromColors(
                     baseColor: GrayscaleWhiteColors.almostWhite,
                     highlightColor: GrayscaleWhiteColors.white,
                     child: ProfileHeader(
-                      profileData:
-                          Get.find<ProfileUserController>().profileData.value,
+                      profileData: controller.profileData.value,
                     ),
                   );
                 }
                 return ProfileHeader(
-                  profileData:
-                      Get.find<ProfileUserController>().profileData.value,
+                  profileData: controller.profileData.value,
                 );
               },
             ),
-            ProfileShowcase(username: widget.username),
+            Expanded(child: ProfileShowcase(username: widget.username)),
           ],
         ),
       ),
@@ -82,7 +80,7 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      margin: const EdgeInsets.fromLTRB(18, 100, 18, 16),
       child: Column(
         children: [
           TopSection(profileData: profileData),
@@ -106,46 +104,67 @@ class TopSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _renderAvatar(profileData.profile, profileData.displayName),
-              const Spacer(),
-              FollowerWidget(
-                data: profileData.documents.toString(),
-                display: "documents",
-              ),
-              FollowerWidget(
-                data: profileData.followers.toString(),
-                display: "followers",
-              ),
-              FollowerWidget(
-                data: profileData.following.toString(),
-                display: "following",
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FollowerWidget(
+                      data: profileData.documents.toString(),
+                      display: "Docs",
+                    ),
+                    FollowerWidget(
+                      data: profileData.followers.toString(),
+                      display: "Followers",
+                    ),
+                    FollowerWidget(
+                      data: profileData.following.toString(),
+                      display: "Following",
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text("${profileData.displayName} ", style: AppTypography.subHead1),
-          Text("${profileData.institute} ", style: AppTypography.body3),
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
+          Text(
+            profileData.displayName,
+            style: AppTypography.heading6.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 16, color: PrimaryColor.shade500),
+              const SizedBox(width: 4),
+              Text(
+                profileData.institute,
+                style: AppTypography.body3.copyWith(color: Colors.grey[600]),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  _renderAvatar(profile, name) {
-    if (profile != "") {
-      return CircleAvatar(
+  _renderAvatar(String profile, String name) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: PrimaryColor.shade500, width: 2),
+      ),
+      child: CircleAvatar(
         radius: 40,
-        backgroundImage: NetworkImage(profile),
-      );
-    } else {
-      return CircleAvatar(
-        radius: 40,
-        backgroundImage: NetworkImage("https://ui-avatars.com/api/?name=$name"),
-      );
-    }
+        backgroundColor: PrimaryColor.shade100,
+        backgroundImage: NetworkImage(
+          profile == "" || profile == "NA"
+              ? "${AppMetaData.avatar_url}&name=$name"
+              : profile,
+        ),
+      ),
+    );
   }
 }
 
@@ -157,42 +176,43 @@ class ButtonSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: Get.width,
-      child: GetX<ProfileUserController>(builder: (controller) {
-        return Row(
-          children: [
-            Expanded(
-              child: PrimaryButton(
-                onTap: () {
-                  controller.follow(username: profileData.username);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    !controller.profileData.value.isFollowedByUser
-                        ? "Follow"
-                        : "Un follow",
-                    style: AppTypography.subHead3.copyWith(
-                      color: GrayscaleWhiteColors.white,
+      child: GetX<ProfileUserController>(
+        tag: profileData.username,
+        builder: (controller) {
+          return Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  onTap: () {
+                    controller.follow(username: profileData.username);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      !controller.profileData.value.isFollowedByUser
+                          ? "Follow"
+                          : "Unfollow",
+                      style: AppTypography.subHead3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            SecondaryButton(
-              width: Get.width / 8,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: CustomIcon(
-                  path: "assets/icons/send.svg",
-                  size: 20,
-                  color: GrayscaleBlackColors.lightBlack,
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: PrimaryColor.shade100,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Icon(Icons.share_outlined, color: PrimaryColor.shade500, size: 24),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        },
+      ),
     );
   }
 }

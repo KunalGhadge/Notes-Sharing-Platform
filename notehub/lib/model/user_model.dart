@@ -4,6 +4,8 @@ part "user_model.g.dart";
 
 @HiveType(typeId: 1)
 class UserModel {
+  @HiveField(8)
+  final String? id;
   @HiveField(0)
   final String displayName;
   @HiveField(1)
@@ -22,6 +24,7 @@ class UserModel {
   final bool isFollowedByUser;
 
   UserModel({
+    this.id,
     required this.displayName,
     required this.username,
     required this.institute,
@@ -33,6 +36,7 @@ class UserModel {
   });
 
   UserModel copyWith({
+    String? id,
     String? displayName,
     String? username,
     String? institute,
@@ -43,6 +47,7 @@ class UserModel {
     bool? isFollowedByUser,
   }) {
     return UserModel(
+      id: id ?? this.id,
       displayName: displayName ?? this.displayName,
       username: username ?? this.username,
       institute: institute ?? this.institute,

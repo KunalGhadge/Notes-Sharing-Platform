@@ -36,12 +36,13 @@ class SecondaryButton extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius ?? 8),
+        borderRadius: BorderRadius.circular(borderRadius ?? 12),
         border: border ??
             Border.all(
-              width: 0,
-              color: GrayscaleBlackColors.lightBlack,
+              width: 1,
+              color: PrimaryColor.shade200,
             ),
+        color: color ?? Colors.white,
       ),
       child: Center(
         child: TextButton(

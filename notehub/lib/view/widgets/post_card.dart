@@ -1,6 +1,7 @@
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:get/get.dart";
+import "package:glassmorphism/glassmorphism.dart";
 import "package:notehub/controller/document_controller.dart";
 import "package:notehub/core/config/color.dart";
 import "package:notehub/core/config/typography.dart";
@@ -9,16 +10,6 @@ import "package:notehub/model/document_model.dart";
 import "package:notehub/view/document_screen/document.dart";
 import "package:notehub/view/profile_screen/profile_user.dart";
 import "package:notehub/view/widgets/loader.dart";
-
-class LikeController extends GetxController {
-  var isLiked = false.obs;
-  var isLoading = false.obs;
-}
-
-class BookmarkController extends GetxController {
-  var isBookmarked = false.obs;
-  var isLoading = false.obs;
-}
 
 class PostCard extends StatefulWidget {
   final DocumentModel document;
@@ -32,49 +23,27 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
-  late LikeController likeController;
-  late BookmarkController bookmarkController;
-
-  @override
-  void initState() {
-    super.initState();
-    likeController = Get.put(LikeController(), tag: widget.document.documentId);
-    likeController.isLiked.value = widget.document.isLiked;
-
-    bookmarkController =
-        Get.put(BookmarkController(), tag: widget.document.documentId);
-    bookmarkController.isBookmarked.value = widget.document.isBookmarked;
-    super.initState();
-  }
-
   @override
   Widget build(context) {
     return Container(
       width: Get.width,
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _renderHeader(),
-          const SizedBox(height: 10),
           GestureDetector(
-            onDoubleTap: () async {
-              likeController.isLoading.value = true;
-              if (likeController.isLiked.value) {
-                await Get.find<DocumentController>().likeDislikeDocument(
-                    documentId: widget.document.documentId, mode: "dislike");
-                widget.document.likes -= 1;
-              } else {
-                await Get.find<DocumentController>().likeDislikeDocument(
-                    documentId: widget.document.documentId, mode: "like");
-                widget.document.likes += 1;
-              }
-              likeController.isLiked.value = !likeController.isLiked.value;
-              widget.document.isLiked = likeController.isLiked.value;
-              likeController.isLoading.value = false;
-            },
             onTap: () => Get.to(
               () => Document(document: widget.document),
               transition: Transition.rightToLeft,
@@ -82,6 +51,7 @@ class _PostCardState extends State<PostCard> {
             child: _renderImage(),
           ),
           _renderFooter(),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -89,7 +59,7 @@ class _PostCardState extends State<PostCard> {
 
   _renderHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           GestureDetector(
@@ -100,20 +70,20 @@ class _PostCardState extends State<PostCard> {
             child: Row(
               children: [
                 CustomAvatar(path: widget.document.profile),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(widget.document.displayName,
-                        style: AppTypography.subHead1),
-                    Text(widget.document.username, style: AppTypography.body4),
+                        style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
+                    Text(widget.document.topic, style: AppTypography.body4.copyWith(color: PrimaryColor.shade500)),
                   ],
                 ),
               ],
             ),
           ),
           const Spacer(),
-          const CustomIcon(path: "assets/icons/ellipsis-vertical.svg"),
+          const Icon(Icons.more_vert, color: Colors.grey),
         ],
       ),
     );
@@ -121,102 +91,91 @@ class _PostCardState extends State<PostCard> {
 
   _renderImage() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: CachedNetworkImage(
-        height: 350,
-        width: Get.width,
-        fit: BoxFit.cover,
-        imageUrl: widget.document.icon,
-        placeholder: (context, url) => const Loader(),
-        errorWidget: (context, url, error) {
-          return Container(
-            color: GrayscaleWhiteColors.almostWhite,
-            child: Center(
-              child: Text(
-                "Unable to load Thumbnail",
-                style: AppTypography.body2,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            CachedNetworkImage(
+              height: 250,
+              width: Get.width,
+              fit: BoxFit.cover,
+              imageUrl: widget.document.icon,
+              placeholder: (context, url) => const Loader(),
+              errorWidget: (context, url, error) => Container(
+                height: 250,
+                color: GrayscaleWhiteColors.almostWhite,
+                child: const Center(child: Icon(Icons.description, size: 50, color: Colors.grey)),
               ),
             ),
-          );
-        },
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: GlassmorphicContainer(
+                width: Get.width,
+                height: 60,
+                borderRadius: 0,
+                blur: 10,
+                alignment: Alignment.bottomCenter,
+                border: 0,
+                linearGradient: AppGradients.glassGradient,
+                borderGradient: AppGradients.glassGradient,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.document.name,
+                          style: AppTypography.subHead2.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   _renderFooter() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6, left: 8, right: 8),
-      child: Obx(() {
-        return Row(
+    return GetBuilder<DocumentController>(
+      builder: (controller) => Padding(
+        padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
+        child: Row(
           children: [
             GestureDetector(
-              onTap: () async {
-                likeController.isLoading.value = true;
-                if (likeController.isLiked.value) {
-                  await Get.find<DocumentController>().likeDislikeDocument(
-                      documentId: widget.document.documentId, mode: "dislike");
-                  widget.document.likes -= 1;
-                } else {
-                  await Get.find<DocumentController>().likeDislikeDocument(
-                      documentId: widget.document.documentId, mode: "like");
-                  widget.document.likes += 1;
-                }
-                likeController.isLiked.value = !likeController.isLiked.value;
-                widget.document.isLiked = likeController.isLiked.value;
-                likeController.isLoading.value = false;
-              },
-              child: likeController.isLoading.value
-                  ? const SizedBox(width: 25, child: Loader2(size: 15))
-                  : likeController.isLiked.value
-                      ? const CustomIcon(
-                          path: "assets/icons/heart-solid.svg",
-                          size: 25,
-                          color: Colors.red,
-                        )
-                      : const CustomIcon(
-                          path: "assets/icons/heart.svg",
-                          size: 25,
-                        ),
+              onTap: () => controller.toggleLike(widget.document),
+              child: Icon(
+                widget.document.isLiked ? Icons.favorite : Icons.favorite_border,
+                color: widget.document.isLiked ? Colors.red : Colors.grey,
+                size: 28,
+              ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Text("${widget.document.likes}", style: AppTypography.body1),
-            const SizedBox(width: 12),
-            const CustomIcon(path: "assets/icons/send.svg"),
+            const SizedBox(width: 20),
+            GestureDetector(
+              onTap: () => controller.toggleBookmark(widget.document),
+              child: Icon(
+                widget.document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                color: widget.document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
+                size: 28,
+              ),
+            ),
             const Spacer(),
-            Obx(() {
-              return GestureDetector(
-                onTap: () async {
-                  bookmarkController.isLoading.value = true;
-                  if (bookmarkController.isBookmarked.value) {
-                    await Get.find<DocumentController>()
-                        .bookmarkUnBookmarkDocument(
-                      documentId: widget.document.documentId,
-                      mode: "unMark",
-                    );
-                  } else {
-                    await Get.find<DocumentController>()
-                        .bookmarkUnBookmarkDocument(
-                      documentId: widget.document.documentId,
-                      mode: "bookmark",
-                    );
-                  }
-                  widget.document.isBookmarked = !widget.document.isBookmarked;
-                  bookmarkController.isBookmarked.value =
-                      !bookmarkController.isBookmarked.value;
-                  bookmarkController.isLoading.value = false;
-                },
-                child: bookmarkController.isLoading.value
-                    ? const SizedBox(width: 25, child: Loader2(size: 15))
-                    : bookmarkController.isBookmarked.value
-                        ? const CustomIcon(
-                            path: "assets/icons/bookmark-mark.svg",
-                          )
-                        : const CustomIcon(path: "assets/icons/bookmark.svg"),
-              );
-            }),
+            Text(
+              "MU Notes",
+              style: AppTypography.body4.copyWith(color: Colors.grey),
+            ),
           ],
-        );
-      }),
+        ),
+      ),
     );
   }
 }

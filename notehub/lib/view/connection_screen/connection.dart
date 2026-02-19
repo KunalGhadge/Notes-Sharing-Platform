@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/core/config/color.dart';
-
 import 'package:notehub/controller/connection_controller.dart';
 import 'package:notehub/view/connection_screen/widget/connection_avatar.dart';
 import 'package:notehub/view/widgets/refresher_widget.dart';
 import 'package:shimmer/shimmer.dart';
 
-enum ConnectionType { follower, following }
+enum ConnectionType { followers, following }
 
 class Connection extends StatefulWidget {
   final String username;
@@ -34,18 +32,12 @@ class _ConnectionState extends State<Connection> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.type.name.capitalize!),
-        backgroundColor: GrayscaleWhiteColors.white,
-        elevation: 5,
-        surfaceTintColor: GrayscaleWhiteColors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.white,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          color: GrayscaleWhiteColors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
-          ),
-        ),
+        color: Colors.white,
         child: Column(
           children: [
             Expanded(child: _renderConnectionList()),
@@ -89,7 +81,7 @@ class _ConnectionState extends State<Connection> {
         connectionController.fetchConnection(type: widget.type);
       },
       child: Center(
-        child: Text("0 ${widget.type.name.capitalize}"),
+        child: Text("No ${widget.type.name.capitalize} yet"),
       ),
     );
   }

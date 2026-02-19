@@ -3,7 +3,7 @@ import "package:get/get.dart";
 import "package:notehub/controller/profile_controller.dart";
 import "package:notehub/core/config/color.dart";
 import "package:notehub/core/config/typography.dart";
-import "package:notehub/view/widgets/normal_button.dart";
+import "package:notehub/view/settings_screen/about.dart";
 
 class SettingsDrawerController extends GetxController {
   var scaffoldKey = GlobalKey<ScaffoldState>();
@@ -22,42 +22,44 @@ class SettingsDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 2, top: 1),
-      child: Drawer(
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: Text("Settings", style: AppTypography.subHead1)),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text("Liked documents", style: AppTypography.subHead2),
-                trailing: _nextIcon(),
+    return Drawer(
+      backgroundColor: Colors.white,
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Settings", style: AppTypography.heading6),
+            const SizedBox(height: 32),
+            _buildDrawerItem(
+              icon: Icons.info_outline_rounded,
+              title: "About Serious Study",
+              onTap: () => Get.to(() => const AboutPage()),
+            ),
+            const Spacer(),
+            ListTile(
+              onTap: () => Get.find<ProfileController>().logout(),
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.logout_rounded, color: DangerColors.shade500),
+              title: Text(
+                "Log out",
+                style: AppTypography.subHead2.copyWith(color: DangerColors.shade500),
               ),
-              NormalButton(
-                onPressed: Get.find<ProfileController>().logoutUser,
-                child: Text(
-                  "Log out",
-                  style: AppTypography.subHead2.copyWith(
-                    color: OtherColors.appleRed,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  _nextIcon() {
-    return Icon(
-      Icons.arrow_forward_ios,
-      size: AppTypography.subHead2.fontSize! + 2,
+  Widget _buildDrawerItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: PrimaryColor.shade500),
+      title: Text(title, style: AppTypography.subHead2),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
     );
   }
 }

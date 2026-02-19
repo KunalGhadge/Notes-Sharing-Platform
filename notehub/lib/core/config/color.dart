@@ -1,14 +1,14 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 class PrimaryColor {
-  static Color shade100 = const Color(0xFFe5fcdc);
-  static Color shade200 = const Color(0xFFc7f9bb);
-  static Color shade300 = const Color(0xFF9eec95);
-  static Color shade400 = const Color(0xFF76db75);
-  static Color shade500 = const Color(0xFF4bc355);
-  static Color shade600 = const Color(0xFF36a74a);
-  static Color shade700 = const Color(0xFF258c40);
-  static Color shade900 = const Color(0xFF0e5d31);
+  static Color shade100 = const Color(0xFFE3F2FD);
+  static Color shade200 = const Color(0xFFBBDEFB);
+  static Color shade300 = const Color(0xFF90CAF9);
+  static Color shade400 = const Color(0xFF64B5F6);
+  static Color shade500 = const Color(0xFF0D47A1); // Premium Deep Blue
+  static Color shade600 = const Color(0xFF1976D2);
+  static Color shade700 = const Color(0xFF1565C0);
+  static Color shade900 = const Color(0xFF0D47A1);
 }
 
 class DangerColors {
@@ -54,6 +54,24 @@ class OtherColors {
   static Color broom = const Color(0xFFFFE816);
   static Color tigerLily = const Color(0xFFe66432);
   static Color appleRed = const Color(0xFFf67373);
-  static Color royalBlue = const Color(0xFF3b4aa5);
-  static Color amethystPurple = const Color(0xFF7e57c2);
+  static Color royalBlue = const Color(0xFF0D47A1);
+  static Color premiumGold = const Color(0xFFFFD700);
+  static Color amethystPurple = const Color(0xFF0D47A1);
+}
+
+class AppGradients {
+  static LinearGradient premiumGradient = const LinearGradient(
+    colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static LinearGradient glassGradient = LinearGradient(
+    colors: [
+      Colors.white.withOpacity(0.1),
+      Colors.white.withOpacity(0.05),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }

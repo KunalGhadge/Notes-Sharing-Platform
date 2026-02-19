@@ -1,110 +1,88 @@
-import 'dart:convert';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
-import 'package:notehub/core/meta/app_meta.dart';
-
 import 'package:notehub/view/widgets/toasts.dart';
+import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
 
 class UploadController extends GetxController {
+  final supabase = Supabase.instance.client;
   var isLoading = false.obs;
-  var selectedDocument = Rxn<PlatformFile>();
-  var selectedCover = Rxn<PlatformFile>();
 
   var nameEditingController = TextEditingController();
   var topicEditingController = TextEditingController();
   var descriptionEditingController = TextEditingController();
 
-  pickDocument() async {
+  var selectedDocument = Rxn<PlatformFile>();
+  var selectedCover = Rxn<PlatformFile>();
+
+  Future<void> pickFile(String state) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ["pdf", "doc", "docx", "jpg", "jpeg", "png"],
-      allowMultiple: false,
+      type: state == "cover" ? FileType.image : FileType.any,
     );
 
-    if (result != null && result.files.isNotEmpty) {
-      selectedDocument.value = result.files.first;
-    } else {
-      Toasts.showTostWarning(message: "Please select a file");
+    if (result != null) {
+      if (state == "cover") {
+        selectedCover.value = result.files.first;
+      } else {
+        selectedDocument.value = result.files.first;
+      }
     }
   }
 
-  pickCover() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-
-    if (result != null && result.files.isNotEmpty) {
-      selectedCover.value = result.files.first;
-    } else {
-      Toasts.showTostWarning(message: "Please select a file");
-    }
-  }
-
-  checkValidity() {
-    if (selectedDocument.value == null) {
-      Toasts.showTostWarning(message: "Please select a file");
-      return false;
-    }
-    if (nameEditingController.text == "") {
-      Toasts.showTostWarning(message: "Please enter a valid name");
-      return false;
-    }
-    if (topicEditingController.text == "") {
-      Toasts.showTostWarning(message: "Please enter a valid topic");
-      return false;
-    }
-    return true;
-  }
-
-  uploadDocument() async {
-    isLoading.value = true;
-    if (!checkValidity()) {
-      isLoading.value = false;
+  Future<void> uploadDocument() async {
+    if (nameEditingController.text.isEmpty || topicEditingController.text.isEmpty) {
+      Toasts.showTostWarning(message: "Please fill all required fields");
       return;
     }
-    Uri uri = Uri.parse(
-        "${AppMetaData.backend_url}/api/documents/${HiveBoxes.username}");
-    var request = http.MultipartRequest("POST", uri);
 
-    var multipartDocumentFile = await http.MultipartFile.fromPath(
-      "document",
-      selectedDocument.value!.path!,
-    );
-
-    request.files.add(multipartDocumentFile);
-    if (selectedCover.value != null) {
-      var multipartCoverFile = await http.MultipartFile.fromPath(
-        "document",
-        selectedCover.value!.path!,
-      );
-      request.files.add(multipartCoverFile);
+    if (selectedDocument.value == null || selectedCover.value == null) {
+      Toasts.showTostWarning(message: "Please select both document and cover");
+      return;
     }
 
-    request.fields["username"] = HiveBoxes.username;
-    request.fields["documentName"] = nameEditingController.text;
-    request.fields["topic"] = topicEditingController.text;
-    request.fields["description"] = descriptionEditingController.text;
-    request.fields["username"] = HiveBoxes.username;
+    isLoading.value = true;
+    try {
+      final userId = HiveBoxes.userId;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-    var response = await request.send();
-    var responseBody = json.decode(await response.stream.bytesToString());
+      final docFile = File(selectedDocument.value!.path!);
+      final coverFile = File(selectedCover.value!.path!);
 
-    if (responseBody["error"]) {
-      Toasts.showTostError(message: "Please fill all the required fields");
-    } else {
+      final docExt = p.extension(docFile.path);
+      final docPath = '$userId/docs/${timestamp}_${nameEditingController.text}$docExt';
+      await supabase.storage.from('documents').upload(docPath, docFile);
+      final docUrl = supabase.storage.from('documents').getPublicUrl(docPath);
+
+      final coverExt = p.extension(coverFile.path);
+      final coverPath = '$userId/covers/${timestamp}_${nameEditingController.text}$coverExt';
+      await supabase.storage.from('documents').upload(coverPath, coverFile);
+      final coverUrl = supabase.storage.from('documents').getPublicUrl(coverPath);
+
+      await supabase.from('documents').insert({
+        'user_id': userId,
+        'name': nameEditingController.text.trim(),
+        'topic': topicEditingController.text.trim(),
+        'description': descriptionEditingController.text.trim(),
+        'document_url': docUrl,
+        'cover_url': coverUrl,
+        'document_name': selectedDocument.value!.name,
+      });
+
+      Toasts.showTostSuccess(message: "Document uploaded successfully!");
       clearForm();
+      Get.back();
+    } catch (e) {
+      print("Upload error: $e");
+      Toasts.showTostError(message: "Failed to upload document");
+    } finally {
+      isLoading.value = false;
     }
-
-    isLoading.value = false;
   }
 
-  clearForm() {
+  void clearForm() {
     nameEditingController.clear();
     topicEditingController.clear();
     descriptionEditingController.clear();

@@ -1,81 +1,118 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:notehub/core/meta/app_meta.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/model/document_model.dart';
 
 class ShowcaseController extends GetxController {
+  final supabase = Supabase.instance.client;
+  var isLoading = false.obs;
+
   var profilePosts = <DocumentModel>[].obs;
   var savedPosts = <DocumentModel>[].obs;
 
-  var isLoading = false.obs;
-
-  fetchProfilePosts({username}) async {
+  Future<void> fetchProfilePosts({required String username}) async {
     isLoading.value = true;
-
-    profilePosts.clear();
-    update();
-    // await Future.delayed(const Duration(seconds: 3));
-    Uri uri;
     try {
-      uri = Uri.parse("${AppMetaData.backend_url}/api/documents/$username");
-      var response = await http.get(uri);
-      var body = json.decode(response.body);
+      final userResponse = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', username)
+          .single();
 
-      if (body["error"]) {
-        update();
-        isLoading.value = false;
-        return;
-      }
-      var tmpData = <DocumentModel>[];
-      var data = body["documents"];
-      for (var doc in data) {
-        var tmp = DocumentModel.toDocument(doc);
-        tmpData.add(tmp);
-      }
-      profilePosts.value = tmpData;
-      update();
+      final userId = userResponse['id'];
+
+      final response = await supabase
+          .from('documents')
+          .select('''
+            *,
+            profiles:user_id (id, username, display_name, profile_url),
+            likes:likes(user_id),
+            bookmarks:bookmarks(user_id)
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      profilePosts.value = _mapDocuments(response);
     } catch (e) {
-      print("Error in fetching profile posts: ${e.toString()}");
+      print("Error fetching profile posts: $e");
+    } finally {
+      isLoading.value = false;
     }
-
-    isLoading.value = false;
   }
 
-  fetchSavedPosts({username}) async {
+  Future<void> fetchSavedPosts({required String username}) async {
     isLoading.value = true;
-
-    savedPosts.clear();
-    update();
-    // await Future.delayed(const Duration(seconds: 3));
-    Uri uri;
     try {
-      uri =
-          Uri.parse("${AppMetaData.backend_url}/api/documents/$username/saved");
-      var response = await http.get(uri);
-      var body = json.decode(response.body);
+      final userResponse = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', username)
+          .single();
 
-      if (body["error"]) {
-        isLoading.value = false;
-        update();
+      final userId = userResponse['id'];
 
+      final bookmarkResponse = await supabase
+          .from('bookmarks')
+          .select('document_id')
+          .eq('user_id', userId);
+
+      final docIds = (bookmarkResponse as List).map((b) => b['document_id']).toList();
+
+      if (docIds.isEmpty) {
+        savedPosts.clear();
         return;
       }
-      var tmpData = <DocumentModel>[];
-      var data = body["documents"];
-      for (var doc in data) {
-        var tmp = DocumentModel.toDocument(doc);
-        tmpData.add(tmp);
-      }
-      savedPosts.value = tmpData;
-      update();
-    } catch (e) {
-      print("Error in fetching saved posts: ${e.toString()}");
-    }
 
-    isLoading.value = false;
+      final response = await supabase
+          .from('documents')
+          .select('''
+            *,
+            profiles:user_id (id, username, display_name, profile_url),
+            likes:likes(user_id),
+            bookmarks:bookmarks(user_id)
+          ''')
+          .inFilter('id', docIds)
+          .order('created_at', ascending: false);
+
+      savedPosts.value = _mapDocuments(response);
+    } catch (e) {
+      print("Error fetching saved posts: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  List<DocumentModel> _mapDocuments(dynamic response) {
+    final List<DocumentModel> tmp = [];
+    final currentUserId = HiveBoxes.userId;
+
+    for (var doc in response) {
+      final profile = doc['profiles'];
+      final List likes = doc['likes'] ?? [];
+      final List bookmarks = doc['bookmarks'] ?? [];
+
+      final isLiked = likes.any((l) => l['user_id'] == currentUserId);
+      final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
+
+      tmp.add(DocumentModel(
+        documentId: doc['id'].toString(),
+        username: profile['username'],
+        displayName: profile['display_name'] ?? "User",
+        profile: profile['profile_url'] ?? "NA",
+        isFollowedByUser: false,
+        name: doc['name'],
+        topic: doc['topic'] ?? "",
+        description: doc['description'] ?? "",
+        likes: doc['likes_count'] ?? 0,
+        icon: doc['cover_url'] ?? "",
+        iconName: "cover",
+        dateOfUpload: DateTime.parse(doc['created_at']),
+        documentName: doc['document_name'] ?? "document",
+        document: doc['document_url'],
+        isLiked: isLiked,
+        isBookmarked: isBookmarked,
+      ));
+    }
+    return tmp;
   }
 }
