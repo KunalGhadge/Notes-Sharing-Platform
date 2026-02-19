@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:notehub/controller/bottom_navigation_controller.dart';
 import 'package:notehub/controller/document_controller.dart';
 import 'package:notehub/controller/download_controller.dart';
 import 'package:notehub/controller/profile_controller.dart';
 import 'package:notehub/controller/profile_user_controller.dart';
 import 'package:notehub/controller/showcase_controller.dart';
-
 import 'package:notehub/core/helper/hive_boxes.dart';
-
 import 'package:notehub/view/bottom_footer/bottom_footer.dart';
 
 class Layout extends StatefulWidget {
@@ -20,35 +17,22 @@ class Layout extends StatefulWidget {
 }
 
 class _LayoutState extends State<Layout> {
-  late BottomNavigationController bottomNavigationController;
   @override
   void initState() {
     super.initState();
     Get.put(ProfileController());
     Get.put(ProfileUserController());
-    Get.put(ShowcaseController(), tag: HiveBoxes.username);
+    Get.put(ShowcaseController());
     Get.put(DocumentController());
     Get.put(DownloadController());
+    Get.put(BottomNavigationController());
     loadData();
   }
 
   void loadData() async {
-    Get.find<ProfileController>().fetchUserData(username: HiveBoxes.username);
-    // Get.find<ProfileController>()
-    //     .fetchUserData(username: "navin82005@gmail.com");
-    // HiveBoxes.userBox.put(
-    //   "data",
-    //   UserModel(
-    //     displayName: "Naveen N",
-    //     profile: '',
-    //     username: "navin82005@gmail.com",
-    //     institute: "Sri Shakthi Institute of Engineering Technology",
-    //     followers: 10,
-    //     following: 12,
-    //     documents: 0,
-    //   ),
-    // );
-    bottomNavigationController = Get.put(BottomNavigationController());
+    if (HiveBoxes.username.isNotEmpty) {
+      Get.find<ProfileController>().fetchUserData(username: HiveBoxes.username);
+    }
   }
 
   @override
@@ -56,9 +40,6 @@ class _LayoutState extends State<Layout> {
     return GetX<BottomNavigationController>(
       builder: (controller) => Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          toolbarHeight: 0,
-        ),
         body: controller.page[controller.currentPage.value],
         bottomNavigationBar: const BottomFooter(),
       ),

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/controller/bottom_navigation_controller.dart';
 import 'package:notehub/controller/showcase_controller.dart';
-
 import 'package:notehub/model/user_model.dart';
-
 import 'package:notehub/view/splash_screen/splash.dart';
 import 'package:toastification/toastification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: AppMetaData.supabaseUrl,
+    anonKey: AppMetaData.supabaseAnonKey,
+  );
+
   await Hive.initFlutter();
   Hive.registerAdapter(UserModelAdapter());
   await Hive.openBox<UserModel>("user");
@@ -27,9 +32,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ToastificationWrapper(
       child: GetMaterialApp(
-        title: 'Note Hub',
+        title: AppMetaData.appName,
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D47A1)),
           useMaterial3: true,
         ),
         home: const Splash(),

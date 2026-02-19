@@ -11,6 +11,7 @@ import 'package:notehub/model/document_model.dart';
 import 'package:notehub/service/file_download.dart';
 import 'package:notehub/view/document_screen/widget/doc_description.dart';
 import 'package:notehub/view/document_screen/widget/follow_button.dart';
+import 'package:notehub/view/document_screen/widget/comment_section.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/secondary_button.dart';
 
@@ -46,45 +47,49 @@ class _DocumentState extends State<Document> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: PrimaryColor.shade500),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: ListView(
           shrinkWrap: true,
           children: [
             _renderHeader(),
             const SizedBox(height: 24),
             DocDescription(document: widget.document),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             _renderDownloader(),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 24),
+            CommentSection(docId: widget.document.documentId),
+            const SizedBox(height: 40),
           ],
         ),
       ),
-      bottomNavigationBar: const SizedBox.shrink(),
     );
   }
 
   _renderHeader() {
     return Row(
-      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         CustomAvatar(path: widget.document.profile),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.document.displayName, style: AppTypography.subHead1),
-            Text(widget.document.username, style: AppTypography.body4),
+            Text(widget.document.displayName, style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
+            Text(widget.document.username, style: AppTypography.body4.copyWith(color: Colors.grey)),
           ],
         ),
         const Spacer(),
-        if (HiveBoxes.username != widget.document.username)
+        if (HiveBoxes.userId != "" && HiveBoxes.username != widget.document.username)
           FollowButton(document: widget.document)
-        else
-          CustomIcon(
-            path: "assets/icons/pen.svg",
-            size: AppTypography.subHead1.fontSize! + 2,
-          ),
+        else if (HiveBoxes.username == widget.document.username)
+          Icon(Icons.edit_note_rounded, color: PrimaryColor.shade500, size: 28),
       ],
     );
   }
@@ -95,36 +100,34 @@ class _DocumentState extends State<Document> {
         Expanded(
           child: PrimaryButton(
             onTap: () {
-              Get.find<DocumentController>().openDocument(
-                widget.document.document,
-                widget.document.documentName,
-              );
+              Get.find<DocumentController>().openDocument(widget.document);
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                "View Document",
-                style: AppTypography.subHead3.copyWith(
-                  color: GrayscaleWhiteColors.white,
+                widget.document.isExternal ? "Open External Link" : "View Document",
+                style: AppTypography.subHead2.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        SecondaryButton(
-          onTap: () {
-            FileDownload.download(
-              url: widget.document.document,
-              name: widget.document.documentName,
-              flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin,
-            );
-          },
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            child: CustomIcon(path: "assets/icons/download.svg"),
+        if (!widget.document.isExternal) ...[
+          const SizedBox(width: 12),
+          SecondaryButton(
+            width: 60,
+            onTap: () {
+              FileDownload.download(
+                url: widget.document.document,
+                name: widget.document.documentName,
+                flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin,
+              );
+            },
+            child: Icon(Icons.download_rounded, color: PrimaryColor.shade500),
           ),
-        ),
+        ],
       ],
     );
   }

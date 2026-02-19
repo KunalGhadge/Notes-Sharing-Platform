@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:notehub/view/profile_screen/widget/post_renderer.dart';
 import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/core/config/color.dart';
-import 'package:notehub/core/helper/custom_icon.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 
 class ProfileTabController extends GetxController {
@@ -36,7 +35,6 @@ class _ProfileShowcaseState extends State<ProfileShowcase>
       vsync: this,
     );
 
-    // Listen to tab changes (scrolling or tapping) and update the selectedIndex
     _tabController.addListener(() {
       profileTabController.changeTabIndex(_tabController.index);
     });
@@ -50,54 +48,45 @@ class _ProfileShowcaseState extends State<ProfileShowcase>
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Obx(
-            () => TabBar(
-              controller: _tabController,
-              indicatorColor: GrayscaleBlackColors.tintedBlack,
-              labelColor: GrayscaleBlackColors.black,
-              unselectedLabelColor: GrayscaleGrayColors.silver,
-              tabs: [
-                Tab(
-                  icon: CustomIcon(
-                    path: profileTabController.selectedIndex.value == 0
-                        ? "assets/icons/book.svg"
-                        : "assets/icons/book.svg",
-                  ),
+    final showcaseController = Get.find<ShowcaseController>(tag: widget.username);
+    return Column(
+      children: [
+        Obx(
+          () => TabBar(
+            controller: _tabController,
+            indicatorColor: PrimaryColor.shade500,
+            labelColor: PrimaryColor.shade500,
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              const Tab(
+                icon: Icon(Icons.grid_view_rounded),
+                text: "My Notes",
+              ),
+              if (HiveBoxes.username == widget.username)
+                const Tab(
+                  icon: Icon(Icons.bookmark_rounded),
+                  text: "Saved",
                 ),
-                if (HiveBoxes.username == widget.username)
-                  Tab(
-                    icon: CustomIcon(
-                      path: profileTabController.selectedIndex.value == 1
-                          ? "assets/icons/bookmark-mark.svg"
-                          : "assets/icons/bookmark.svg",
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                PostsRenderer(
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              Obx(() => PostsRenderer(
+                usernameTag: widget.username!,
+                posts: showcaseController.profilePosts,
+              )),
+              if (HiveBoxes.username == widget.username)
+                Obx(() => PostsRenderer(
                   usernameTag: widget.username!,
-                  posts: Get.find<ShowcaseController>(tag: widget.username)
-                      .profilePosts,
-                ),
-                if (HiveBoxes.username == widget.username)
-                  PostsRenderer(
-                    usernameTag: widget.username!,
-                    posts: Get.find<ShowcaseController>(tag: widget.username)
-                        .savedPosts,
-                  ),
-              ],
-            ),
+                  posts: showcaseController.savedPosts,
+                )),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

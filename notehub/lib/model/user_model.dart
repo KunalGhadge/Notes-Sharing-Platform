@@ -4,6 +4,8 @@ part "user_model.g.dart";
 
 @HiveType(typeId: 1)
 class UserModel {
+  @HiveField(8)
+  final String? id;
   @HiveField(0)
   final String displayName;
   @HiveField(1)
@@ -20,8 +22,11 @@ class UserModel {
   final int documents;
   @HiveField(7)
   final bool isFollowedByUser;
+  @HiveField(9)
+  final List<String> academicInterests;
 
   UserModel({
+    this.id,
     required this.displayName,
     required this.username,
     required this.institute,
@@ -30,9 +35,11 @@ class UserModel {
     this.followers = 0,
     this.following = 0,
     this.documents = 0,
+    this.academicInterests = const [],
   });
 
   UserModel copyWith({
+    String? id,
     String? displayName,
     String? username,
     String? institute,
@@ -41,8 +48,10 @@ class UserModel {
     int? following,
     int? documents,
     bool? isFollowedByUser,
+    List<String>? academicInterests,
   }) {
     return UserModel(
+      id: id ?? this.id,
       displayName: displayName ?? this.displayName,
       username: username ?? this.username,
       institute: institute ?? this.institute,
@@ -51,6 +60,7 @@ class UserModel {
       following: following ?? this.following,
       documents: documents ?? this.documents,
       isFollowedByUser: isFollowedByUser ?? this.isFollowedByUser,
+      academicInterests: academicInterests ?? this.academicInterests,
     );
   }
 }

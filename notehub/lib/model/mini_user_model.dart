@@ -8,7 +8,7 @@ class MiniUserModel {
   MiniUserModel({
     required this.username,
     required this.displayName,
-    required this.institute,
+    this.institute = "Mumbai University",
     required this.profile,
     this.isFollowedByUser = false,
   });
@@ -26,16 +26,6 @@ class MiniUserModel {
       institute: institute ?? this.institute,
       profile: profile ?? this.profile,
       isFollowedByUser: isFollowedByUser ?? this.isFollowedByUser,
-    );
-  }
-
-  static MiniUserModel toMiniUserModel(user) {
-    return MiniUserModel(
-      displayName: user["display_name"],
-      username: user["username"],
-      profile: user["profile"] ?? "NA",
-      institute: user["institute"],
-      isFollowedByUser: user["isFollowedByUser"] ?? false,
     );
   }
 }

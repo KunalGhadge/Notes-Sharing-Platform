@@ -3,9 +3,7 @@ import 'package:get/get.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
 import 'package:notehub/core/helper/custom_icon.dart';
-import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/mini_user_model.dart';
-import 'package:notehub/view/connection_screen/widget/more_options.dart';
 import 'package:notehub/view/profile_screen/profile_user.dart';
 
 class ConnectionAvatar extends StatelessWidget {
@@ -16,76 +14,20 @@ class ConnectionAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (user == null) {
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         width: Get.width,
-        height: 80,
-        color: GrayscaleWhiteColors.darkWhite,
+        height: 60,
+        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
       );
     }
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      width: Get.width,
-      // height: 80,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero,
-          ),
-          side: BorderSide.none,
-          padding: EdgeInsets.zero,
-          elevation: 0,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minimumSize: Size.zero,
-          foregroundColor: GrayscaleBlackColors.black,
-        ),
-        onPressed: () {
-          Get.to(() => ProfileUser(username: user!.username));
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              CustomAvatar(path: _getProfileUrl()),
-              const SizedBox(width: 16),
-              _renderLabels(),
-              const Spacer(),
-              _renderOptions(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  _getProfileUrl() {
-    if (user!.profile == "NA") {
-      return "${AppMetaData.avatar_url}&name=${user!.displayName}";
-    } else {
-      return user!.profile;
-    }
-  }
-
-  _renderLabels() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(user!.displayName, style: AppTypography.body1),
-        SizedBox(
-          width: Get.width / 1.5,
-          child: Text(user!.institute, style: AppTypography.body4),
-        ),
-      ],
-    );
-  }
-
-  _renderOptions() {
-    return IconButton(
-      onPressed: () {
-        Get.bottomSheet(const MoreOptions());
-      },
-      icon: const CustomIcon(path: "assets/icons/ellipsis-vertical.svg"),
+    return ListTile(
+      onTap: () => Get.to(() => ProfileUser(username: user!.username)),
+      leading: CustomAvatar(path: user!.profile, name: user!.displayName, radius: 24),
+      title: Text(user!.displayName, style: AppTypography.subHead2.copyWith(fontWeight: FontWeight.bold)),
+      subtitle: Text(user!.institute, style: AppTypography.body4.copyWith(color: Colors.grey)),
+      trailing: user!.isFollowedByUser
+        ? Icon(Icons.check_circle_rounded, color: PrimaryColor.shade500)
+        : Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey[400]),
     );
   }
 }

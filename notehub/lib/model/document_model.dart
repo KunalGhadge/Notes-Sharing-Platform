@@ -12,11 +12,14 @@ class DocumentModel {
   String icon;
   String iconName;
   int likes;
+  int dislikes;
   DateTime dateOfUpload;
   String documentName;
   String document;
   bool isLiked;
+  bool isDisliked;
   bool isBookmarked;
+  bool isExternal;
 
   DocumentModel({
     required this.username,
@@ -28,41 +31,22 @@ class DocumentModel {
     required this.description,
     required this.documentId,
     required this.likes,
+    this.dislikes = 0,
     required this.icon,
     required this.iconName,
     required this.dateOfUpload,
     required this.documentName,
     required this.document,
     this.isLiked = false,
+    this.isDisliked = false,
     this.isBookmarked = false,
+    this.isExternal = false,
   });
 
-  static toDocument(doc) {
-    return DocumentModel(
-      documentId: doc["_id"],
-      username: doc["username"],
-      displayName: doc["displayName"],
-      isFollowedByUser: doc["isFollowedByUser"],
-      profile: verifyProfile(doc),
-      name: doc["name"],
-      topic: doc["topic"],
-      description: doc["description"],
-      likes: doc["likes"],
-      icon: '${AppMetaData.backend_url}/api/documents/download/${doc["cover"]}',
-      dateOfUpload: DateTime.parse(doc["dateOfUpload"]),
-      documentName: doc["documentName"],
-      iconName: doc["coverName"],
-      document:
-          '${AppMetaData.backend_url}/api/documents/download/${doc["document"]}',
-      isLiked: doc["likedBy"] ?? false,
-      isBookmarked: doc["bookmarkedBy"] ?? false,
-    );
-  }
-
-  static String verifyProfile(doc) {
-    if (doc["profile"] == "NA" || doc["profile"] == null) {
-      return "${AppMetaData.avatar_url}&name=${doc["displayName"]}";
+  static String verifyProfile(String? profileUrl, String displayName) {
+    if (profileUrl == null || profileUrl == "NA" || profileUrl.isEmpty) {
+      return "${AppMetaData.avatar_url}&name=$displayName";
     }
-    return '${AppMetaData.backend_url}/api/documents/download/${doc["profile"]}';
+    return profileUrl;
   }
 }

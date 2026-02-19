@@ -1,20 +1,17 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
-
-import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
-
-import 'package:http/http.dart' as http;
 import 'package:notehub/view/widgets/toasts.dart';
 
 class ProfileUserController extends GetxController {
+  final supabase = Supabase.instance.client;
+
   var profileData = UserModel(
     displayName: '',
     username: "",
-    institute: "",
-    profile: "",
+    institute: "Mumbai University",
+    profile: "NA",
     followers: 0,
     following: 0,
     documents: 0,
@@ -22,84 +19,79 @@ class ProfileUserController extends GetxController {
 
   var isLoading = false.obs;
 
-  fetchUserData({username}) async {
-    profileData.value = profileData.value.copyWith(
-      displayName: '',
-      username: "",
-      institute: "",
-      profile: "",
-      followers: 0,
-      following: 0,
-      documents: 0,
-    );
+  Future<void> fetchUserData({required String username}) async {
     isLoading.value = true;
-
-    var uri = Uri.parse(
-        "${AppMetaData.backend_url}/api/user/fetch/${HiveBoxes.username}");
-
     try {
-      var response = await http.post(uri, body: {"username": username});
-      var response_data = json.decode(response.body);
-      if (response_data["error"] == true) {
-        print("Error: ${response_data['message']}");
-        if (HiveBoxes.userBox.containsKey("data")) {
-          profileData.value = HiveBoxes.userBox.get("data")!;
-        }
-        isLoading.value = false;
-        return;
-      }
-      var user = response_data["user"];
-      profileData.value = profileData.value.copyWith(
-        displayName: user["display_name"],
-        username: user["username"],
-        profile: user["profile"] ??
-            "${AppMetaData.avatar_url}&name=${user["display_name"]}",
-        institute: user["institute"],
-        followers: user["followers"],
-        following: user["following"],
-        documents: user["files"].length,
-        isFollowedByUser: user["isFollowedByUser"] ?? false,
+      final profileResponse = await supabase
+          .from('profiles')
+          .select()
+          .eq('username', username)
+          .single();
+
+      final userId = profileResponse['id'];
+      final currentUserId = HiveBoxes.userId;
+
+      final followResponse = await supabase
+          .from('follows')
+          .select()
+          .match({'follower_id': currentUserId, 'following_id': userId})
+          .maybeSingle();
+
+      final isFollowed = followResponse != null;
+
+      final docs = await supabase.from('documents').select('id').eq('user_id', userId);
+      final followers = await supabase.from('follows').select('follower_id').eq('following_id', userId);
+      final following = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+
+      profileData.value = UserModel(
+        id: userId,
+        displayName: profileResponse['display_name'] ?? "User",
+        username: profileResponse['username'],
+        profile: profileResponse['profile_url'] ?? "NA",
+        institute: profileResponse['institute'] ?? "Mumbai University",
+        followers: (followers as List).length,
+        following: (following as List).length,
+        documents: (docs as List).length,
+        isFollowedByUser: isFollowed,
       );
     } catch (error) {
       print("Error in fetching user data: ${error.toString()}");
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 
-  follow({username, isProfile = true}) async {
+  Future<bool> follow({required String username, bool isProfile = true}) async {
     isLoading.value = true;
     try {
-      var url = Uri.parse(
-          "${AppMetaData.backend_url}/api/user/follow/${HiveBoxes.username}");
+      final currentUserId = HiveBoxes.userId;
+      final targetUserId = profileData.value.id;
 
-      var response = await http.post(url, body: {
-        "username": username,
-      });
-      var body = json.decode(response.body);
-      if (body["error"]) {
-        Toasts.showTostError(message: "Unable to take action");
-        isLoading.value = false;
-        return false;
+      if (targetUserId == null) return false;
+
+      if (profileData.value.isFollowedByUser) {
+        await supabase
+            .from('follows')
+            .delete()
+            .match({'follower_id': currentUserId, 'following_id': targetUserId});
+        Toasts.showTostSuccess(message: "Unfollowed $username");
       } else {
-        if (profileData.value.isFollowedByUser) {
-          Toasts.showTostSuccess(message: "Un followed $username");
-        } else {
-          Toasts.showTostSuccess(message: "Followed $username");
-        }
+        await supabase
+            .from('follows')
+            .insert({'follower_id': currentUserId, 'following_id': targetUserId});
+        Toasts.showTostSuccess(message: "Followed $username");
       }
+
+      if (isProfile) {
+        await fetchUserData(username: username);
+      }
+      return true;
     } catch (e) {
       Toasts.showTostError(message: "Unable to take action");
-      print("Error in following $username");
-      isLoading.value = false;
+      print("Error in following $username: $e");
       return false;
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
-    if (isProfile) {
-      await fetchUserData(username: username);
-    }
-
-    return true;
   }
-
-  checkFollowers({username}) async {}
 }

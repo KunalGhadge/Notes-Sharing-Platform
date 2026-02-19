@@ -1,9 +1,11 @@
 class AppMetaData {
-  static String appName = "Note Hub";
+  static String appName = "Serious Study";
   static String appIcon = "assets/icons/app_icon_foreground.png";
-  // static String backend_url = "http://localhost:8080";
-  static String backend_url = "https://s36fdtff-8000.inc1.devtunnels.ms";
+
+  static String supabaseUrl = "https://zacnlmmmnflxzzzuebdb.supabase.co";
+  static String supabaseAnonKey =
+      "sb_publishable_s65w1XVsJwlDnix5_wJP6g_R8q52f_z";
 
   static String avatar_url =
-      "https://ui-avatars.com/api/?background=7e57c2&color=fff";
+      "https://ui-avatars.com/api/?background=0d47a1&color=fff";
 }

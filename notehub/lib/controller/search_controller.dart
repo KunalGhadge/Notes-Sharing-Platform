@@ -3,80 +3,40 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/model/document_model.dart';
 
-class ShowcaseController extends GetxController {
+class AppSearchController extends GetxController {
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
+  var results = <DocumentModel>[].obs;
 
-  var profilePosts = <DocumentModel>[].obs;
-  var savedPosts = <DocumentModel>[].obs;
+  Future<void> searchDocuments(String query, {String? topic}) async {
+    if (query.isEmpty && topic == null) {
+      results.clear();
+      return;
+    }
 
-  Future<void> fetchProfilePosts({required String username}) async {
     isLoading.value = true;
     try {
-      final userResponse = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', username)
-          .single();
-
-      final userId = userResponse['id'];
-
-      final response = await supabase
+      var request = supabase
           .from('documents')
           .select('''
             *,
             profiles:user_id (id, username, display_name, profile_url),
             interactions:interactions(user_id, type),
             bookmarks:bookmarks(user_id)
-          ''')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+          ''');
 
-      profilePosts.value = _mapDocuments(response);
-    } catch (e) {
-      print("Error fetching profile posts: $e");
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> fetchSavedPosts({required String username}) async {
-    isLoading.value = true;
-    try {
-      final userResponse = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', username)
-          .single();
-
-      final userId = userResponse['id'];
-
-      final bookmarkResponse = await supabase
-          .from('bookmarks')
-          .select('document_id')
-          .eq('user_id', userId);
-
-      final docIds = (bookmarkResponse as List).map((b) => b['document_id']).toList();
-
-      if (docIds.isEmpty) {
-        savedPosts.clear();
-        return;
+      if (query.isNotEmpty) {
+        request = request.ilike('name', '%$query%');
       }
 
-      final response = await supabase
-          .from('documents')
-          .select('''
-            *,
-            profiles:user_id (id, username, display_name, profile_url),
-            interactions:interactions(user_id, type),
-            bookmarks:bookmarks(user_id)
-          ''')
-          .inFilter('id', docIds)
-          .order('created_at', ascending: false);
+      if (topic != null && topic != 'All') {
+        request = request.eq('topic', topic);
+      }
 
-      savedPosts.value = _mapDocuments(response);
+      final response = await request.order('created_at', ascending: false);
+      results.value = _mapDocuments(response);
     } catch (e) {
-      print("Error fetching saved posts: $e");
+      print("Search error: $e");
     } finally {
       isLoading.value = false;
     }

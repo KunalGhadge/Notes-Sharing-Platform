@@ -16,9 +16,9 @@ class RefresherWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LiquidPullToRefresh(
       onRefresh: onRefresh,
-      backgroundColor: OtherColors.amethystPurple,
+      backgroundColor: PrimaryColor.shade500,
       showChildOpacityTransition: false,
-      color: GrayscaleWhiteColors.white,
+      color: Colors.white,
       borderWidth: 2,
       animSpeedFactor: 10,
       height: 70,

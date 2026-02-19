@@ -1,108 +1,188 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
-
-import 'package:notehub/core/meta/app_meta.dart';
-
 import 'package:notehub/model/document_model.dart';
 import 'package:notehub/service/file_caching.dart';
 import 'package:notehub/view/widgets/toasts.dart';
 import 'package:open_file/open_file.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DocumentController extends GetxController {
-  var documents = <DocumentModel>[].obs;
+  final supabase = Supabase.instance.client;
   var isLoading = false.obs;
+  var userDocs = <DocumentModel>[].obs;
 
-  fetchDocsForUsername({required String username}) async {
-    isLoading.value = true;
-    documents.clear();
+  Future<void> fetchDocsForUsername({required String username}) async {
+    try {
+      final userResponse = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', username)
+          .single();
 
-    isLoading.value = false;
+      final userId = userResponse['id'];
+      await fetchDocsByUserId(userId);
+    } catch (e) {
+      print("Error fetching docs for $username: $e");
+    }
   }
 
-  openDocument(url, documentName) async {
-    isLoading.value = true;
-    var savePath = await saveAndOpenFile(uri: url, name: documentName);
-    isLoading.value = false;
-    OpenFile.open(savePath);
-  }
-
-  fetchDocument({required String documentId}) async {}
-
-  likeDislikeDocument(
-      {required String documentId, required String mode}) async {
+  Future<void> fetchDocsByUserId(String userId) async {
     isLoading.value = true;
     try {
-      var uri = Uri.parse("${AppMetaData.backend_url}/api/document/like");
+      final response = await supabase
+          .from('documents')
+          .select('''
+            *,
+            profiles:user_id (id, username, display_name, profile_url),
+            interactions:interactions(user_id, type),
+            bookmarks:bookmarks(user_id)
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
 
-      http.Response response;
-      if (mode == "like") {
-        response = await http.post(
-          uri,
-          body: {
-            "username": HiveBoxes.username,
-            "document_id": documentId,
-          },
-        );
-      } else {
-        response = await http.delete(
-          uri,
-          body: {
-            "username": HiveBoxes.username,
-            "document_id": documentId,
-          },
-        );
-      }
-
-      var body = json.decode(response.body);
-      if (body["error"]) {
-        Toasts.showTostError(message: body["message"]);
-        isLoading.value = false;
-        return;
-      }
+      userDocs.value = _mapDocuments(response);
     } catch (e) {
-      print("Error in liking document ${e.toString()}");
+      print("Error fetching docs: $e");
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 
-  bookmarkUnBookmarkDocument(
-      {required String documentId, required String mode}) async {
-    isLoading.value = true;
+  List<DocumentModel> _mapDocuments(dynamic response) {
+    final List<DocumentModel> tmp = [];
+    final currentUserId = HiveBoxes.userId;
+
+    for (var doc in response) {
+      final profile = doc['profiles'];
+      final List interactions = doc['interactions'] ?? [];
+      final List bookmarks = doc['bookmarks'] ?? [];
+
+      final interaction = interactions.firstWhere(
+        (i) => i['user_id'] == currentUserId,
+        orElse: () => null
+      );
+
+      final isLiked = interaction != null && interaction['type'] == 'like';
+      final isDisliked = interaction != null && interaction['type'] == 'dislike';
+      final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
+
+      tmp.add(DocumentModel(
+        documentId: doc['id'].toString(),
+        username: profile['username'],
+        displayName: profile['display_name'] ?? "User",
+        profile: profile['profile_url'] ?? "NA",
+        isFollowedByUser: false,
+        name: doc['name'],
+        topic: doc['topic'] ?? "",
+        description: doc['description'] ?? "",
+        likes: doc['likes_count'] ?? 0,
+        dislikes: doc['dislikes_count'] ?? 0,
+        icon: doc['cover_url'] ?? "",
+        iconName: "cover",
+        dateOfUpload: DateTime.parse(doc['created_at']),
+        documentName: doc['document_name'] ?? "document",
+        document: doc['document_url'],
+        isLiked: isLiked,
+        isDisliked: isDisliked,
+        isBookmarked: isBookmarked,
+        isExternal: doc['is_external'] ?? false,
+      ));
+    }
+    return tmp;
+  }
+
+  Future<void> toggleLike(DocumentModel doc) async {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty) return;
 
     try {
-      var uri = Uri.parse("${AppMetaData.backend_url}/api/document/bookmark");
-
-      http.Response response;
-      if (mode == "bookmark") {
-        response = await http.post(
-          uri,
-          body: {
-            "username": HiveBoxes.username,
-            "document_id": documentId,
-          },
-        );
+      if (doc.isLiked) {
+        await supabase.from('interactions').delete().match({'user_id': userId, 'document_id': doc.documentId});
+        await supabase.rpc('decrement_likes', params: {'doc_id': doc.documentId});
+        doc.likes -= 1;
       } else {
-        response = await http.delete(
-          uri,
-          body: {
-            "username": HiveBoxes.username,
-            "document_id": documentId,
-          },
-        );
+        if (doc.isDisliked) await toggleDislike(doc);
+        await supabase.from('interactions').upsert({'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
+        await supabase.rpc('increment_likes', params: {'doc_id': doc.documentId});
+        doc.likes += 1;
+        _createNotification(doc.documentId, 'like');
       }
-
-      var body = json.decode(response.body);
-      if (body["error"]) {
-        Toasts.showTostError(message: body["message"]);
-        isLoading.value = false;
-        return;
-      }
+      doc.isLiked = !doc.isLiked;
+      update();
     } catch (e) {
-      print("Error in liking document ${e.toString()}");
+      Toasts.showTostError(message: "Failed to update like");
     }
-    isLoading.value = false;
+  }
+
+  Future<void> toggleDislike(DocumentModel doc) async {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty) return;
+
+    try {
+      if (doc.isDisliked) {
+        await supabase.from('interactions').delete().match({'user_id': userId, 'document_id': doc.documentId});
+        await supabase.rpc('decrement_dislikes', params: {'doc_id': doc.documentId});
+        doc.dislikes -= 1;
+      } else {
+        if (doc.isLiked) await toggleLike(doc);
+        await supabase.from('interactions').upsert({'user_id': userId, 'document_id': doc.documentId, 'type': 'dislike'});
+        await supabase.rpc('increment_dislikes', params: {'doc_id': doc.documentId});
+        doc.dislikes += 1;
+      }
+      doc.isDisliked = !doc.isDisliked;
+      update();
+    } catch (e) {
+      Toasts.showTostError(message: "Failed to update dislike");
+    }
+  }
+
+  Future<void> toggleBookmark(DocumentModel doc) async {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty) return;
+
+    try {
+      if (doc.isBookmarked) {
+        await supabase.from('bookmarks').delete().match({'user_id': userId, 'document_id': doc.documentId});
+      } else {
+        await supabase.from('bookmarks').insert({'user_id': userId, 'document_id': doc.documentId});
+      }
+      doc.isBookmarked = !doc.isBookmarked;
+      update();
+    } catch (e) {
+      Toasts.showTostError(message: "Failed to update bookmark");
+    }
+  }
+
+  Future<void> _createNotification(String docId, String type) async {
+    try {
+      final docData = await supabase.from('documents').select('user_id').eq('id', docId).single();
+      final receiverId = docData['user_id'];
+      final senderId = HiveBoxes.userId;
+      if (receiverId == senderId) return;
+
+      await supabase.from('notifications').insert({
+        'receiver_id': receiverId,
+        'sender_id': senderId,
+        'document_id': docId,
+        'type': type,
+      });
+    } catch (e) {
+      print("Notification error: $e");
+    }
+  }
+
+  void openDocument(DocumentModel doc) async {
+    if (doc.isExternal) {
+      final uri = Uri.parse(doc.document);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Toasts.showTostError(message: "Our systems encountered an issue opening this link. Please verify it's a valid URL.");
+      }
+    } else {
+      String path = await saveAndOpenFile(uri: doc.document, name: doc.documentName);
+      OpenFile.open(path);
+    }
   }
 }

@@ -1,74 +1,79 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
-
-import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
-
-import 'package:http/http.dart' as http;
 import 'package:notehub/view/auth_screen/login.dart';
+import 'package:notehub/view/widgets/toasts.dart';
 
 class ProfileController extends GetxController {
-  var profileData = UserModel(
-    displayName: '',
+  final supabase = Supabase.instance.client;
+  var isLoading = false.obs;
+  var user = UserModel(
+    displayName: "",
     username: "",
-    institute: "",
+    institute: "Mumbai University",
     profile: "NA",
-    followers: 0,
-    following: 0,
-    documents: 0,
   ).obs;
 
-  var isLoading = false.obs;
-
-  fetchUserData({username}) async {
+  Future<void> fetchUserData({required String username}) async {
     isLoading.value = true;
-
-    var uri = Uri.parse("${AppMetaData.backend_url}/api/user/$username");
-
-    // await Future.delayed(const Duration(seconds: 3));
-
     try {
-      var response = await http.get(uri);
-      var response_data = json.decode(response.body);
-      if (response_data["error"] == true) {
-        print("Error: ${response_data['message']}");
-        if (HiveBoxes.userBox.containsKey("data")) {
-          profileData.value = HiveBoxes.userBox.get("data")!;
-        }
-        isLoading.value = false;
-        return;
+      final profileData = await supabase
+          .from('profiles')
+          .select()
+          .eq('username', username)
+          .single();
+
+      final userId = profileData['id'];
+
+      final docs = await supabase.from('documents').select('id').eq('user_id', userId);
+      final followers = await supabase.from('follows').select('follower_id').eq('following_id', userId);
+      final following = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+
+      user.value = UserModel(
+        id: userId,
+        displayName: profileData['display_name'] ?? "User",
+        username: profileData['username'],
+        institute: profileData['institute'] ?? "Mumbai University",
+        profile: profileData['profile_url'] ?? "NA",
+        documents: (docs as List).length,
+        followers: (followers as List).length,
+        following: (following as List).length,
+        academicInterests: List<String>.from(profileData['academic_interests'] ?? []),
+      );
+
+      if (username == HiveBoxes.username) {
+        await HiveBoxes.setUser(user.value);
       }
-      var user = response_data["user"];
-      var newUser = UserModel(
-        displayName: user["display_name"],
-        username: user["username"],
-        institute: user["institute"],
-        profile: user["profile"] ?? "NA",
-        documents: user["files"],
-        followers: user["followers"],
-        following: user["following"],
-      );
-      await HiveBoxes.setUser(newUser);
-      profileData.value = profileData.value.copyWith(
-        displayName: user["display_name"],
-        username: user["username"],
-        profile: user["profile"] ??
-            "${AppMetaData.avatar_url}&name=${user["display_name"]}",
-        institute: user["institute"],
-        followers: user["followers"],
-        following: user["following"],
-        documents: user["files"],
-      );
-    } catch (error) {
-      print("Error in fetching user data: ${error.toString()}");
+    } catch (e) {
+      print("Error fetching profile: $e");
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 
-  logoutUser() async {
+  Future<void> updateProfile({String? name, String? institute, List<String>? interests}) async {
+    isLoading.value = true;
+    try {
+      final userId = HiveBoxes.userId;
+      await supabase.from('profiles').update({
+        if (name != null) 'display_name': name,
+        if (institute != null) 'institute': institute,
+        if (interests != null) 'academic_interests': interests,
+      }).eq('id', userId);
+
+      fetchUserData(username: HiveBoxes.username);
+      Toasts.showTostSuccess(message: "Profile updated successfully");
+    } catch (e) {
+      Toasts.showTostError(message: "Failed to update profile");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void logout() async {
+    await supabase.auth.signOut();
     await HiveBoxes.resetUser();
-    Get.off(() => const Login());
+    Get.offAll(() => const Login());
   }
 }
