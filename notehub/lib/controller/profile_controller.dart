@@ -39,6 +39,7 @@ class ProfileController extends GetxController {
         documents: (docs as List).length,
         followers: (followers as List).length,
         following: (following as List).length,
+        academicInterests: List<String>.from(profileData['academic_interests'] ?? []),
       );
 
       if (username == HiveBoxes.username) {

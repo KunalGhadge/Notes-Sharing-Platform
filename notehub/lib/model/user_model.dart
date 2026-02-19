@@ -22,6 +22,8 @@ class UserModel {
   final int documents;
   @HiveField(7)
   final bool isFollowedByUser;
+  @HiveField(9)
+  final List<String> academicInterests;
 
   UserModel({
     this.id,
@@ -33,6 +35,7 @@ class UserModel {
     this.followers = 0,
     this.following = 0,
     this.documents = 0,
+    this.academicInterests = const [],
   });
 
   UserModel copyWith({
@@ -45,6 +48,7 @@ class UserModel {
     int? following,
     int? documents,
     bool? isFollowedByUser,
+    List<String>? academicInterests,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -56,6 +60,7 @@ class UserModel {
       following: following ?? this.following,
       documents: documents ?? this.documents,
       isFollowedByUser: isFollowedByUser ?? this.isFollowedByUser,
+      academicInterests: academicInterests ?? this.academicInterests,
     );
   }
 }

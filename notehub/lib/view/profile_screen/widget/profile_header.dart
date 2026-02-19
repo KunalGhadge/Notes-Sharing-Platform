@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
-import 'package:notehub/core/helper/custom_icon.dart';
 import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/connection_screen/connection.dart';
 import 'package:notehub/view/profile_screen/widget/follower_widget.dart';
 import 'package:notehub/view/profile_screen/widget/edit_profile_dialog.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
+import 'package:notehub/core/helper/custom_icon.dart';
 
 class ProfileHeader extends StatelessWidget {
   final UserModel profileData;
@@ -19,12 +19,35 @@ class ProfileHeader extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TopSection(profileData: profileData),
+          const SizedBox(height: 16),
+          if (profileData.academicInterests.isNotEmpty)
+            _renderInterests(),
           const SizedBox(height: 24),
           const ButtonSection(),
         ],
       ),
+    );
+  }
+
+  Widget _renderInterests() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: profileData.academicInterests.map((interest) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: PrimaryColor.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: PrimaryColor.shade200),
+        ),
+        child: Text(
+          interest,
+          style: AppTypography.body4.copyWith(color: PrimaryColor.shade900, fontWeight: FontWeight.w500),
+        ),
+      )).toList(),
     );
   }
 }
@@ -43,7 +66,7 @@ class TopSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _renderAvatar(profileData.profile, profileData.displayName),
+              CustomAvatar(path: profileData.profile, name: profileData.displayName, radius: 40),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -98,24 +121,6 @@ class TopSection extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  _renderAvatar(String profile, String name) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: PrimaryColor.shade500, width: 2),
-      ),
-      child: CircleAvatar(
-        radius: 40,
-        backgroundColor: PrimaryColor.shade100,
-        backgroundImage: NetworkImage(
-          profile == "" || profile == "NA"
-              ? "${AppMetaData.avatar_url}&name=$name"
-              : profile,
-        ),
       ),
     );
   }

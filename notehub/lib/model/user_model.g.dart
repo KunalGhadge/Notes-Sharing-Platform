@@ -26,13 +26,14 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       followers: fields[5] as int,
       following: fields[4] as int,
       documents: fields[6] as int,
+      academicInterests: (fields[9] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, UserModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(8)
       ..write(obj.id)
       ..writeByte(0)
@@ -50,7 +51,9 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(6)
       ..write(obj.documents)
       ..writeByte(7)
-      ..write(obj.isFollowedByUser);
+      ..write(obj.isFollowedByUser)
+      ..writeByte(9)
+      ..write(obj.academicInterests);
   }
 
   @override
