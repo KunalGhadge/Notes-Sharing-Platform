@@ -17,6 +17,7 @@ class DocumentModel {
   String document;
   bool isLiked;
   bool isBookmarked;
+  bool isExternal;
 
   DocumentModel({
     required this.username,
@@ -35,6 +36,7 @@ class DocumentModel {
     required this.document,
     this.isLiked = false,
     this.isBookmarked = false,
+    this.isExternal = false,
   });
 
   static String verifyProfile(String? profileUrl, String displayName) {

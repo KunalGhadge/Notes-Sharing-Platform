@@ -111,6 +111,7 @@ class ShowcaseController extends GetxController {
         document: doc['document_url'],
         isLiked: isLiked,
         isBookmarked: isBookmarked,
+        isExternal: doc['is_external'] ?? false,
       ));
     }
     return tmp;

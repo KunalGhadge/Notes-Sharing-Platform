@@ -33,6 +33,7 @@ class HomeController extends GetxController {
 
       for (var doc in response) {
         final profile = doc['profiles'];
+
         final List likes = doc['likes'] ?? [];
         final List bookmarks = doc['bookmarks'] ?? [];
 
@@ -56,6 +57,7 @@ class HomeController extends GetxController {
           document: doc['document_url'],
           isLiked: isLiked,
           isBookmarked: isBookmarked,
+          isExternal: doc['is_external'] ?? false,
         ));
       }
 

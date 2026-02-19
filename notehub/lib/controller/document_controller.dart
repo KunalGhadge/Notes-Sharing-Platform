@@ -5,6 +5,7 @@ import 'package:notehub/model/document_model.dart';
 import 'package:notehub/service/file_caching.dart';
 import 'package:notehub/view/widgets/toasts.dart';
 import 'package:open_file/open_file.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DocumentController extends GetxController {
   final supabase = Supabase.instance.client;
@@ -68,6 +69,7 @@ class DocumentController extends GetxController {
           document: doc['document_url'],
           isLiked: isLiked,
           isBookmarked: isBookmarked,
+          isExternal: doc['is_external'] ?? false,
         ));
       }
     } catch (e) {
@@ -128,8 +130,17 @@ class DocumentController extends GetxController {
     }
   }
 
-  void openDocument(String url, String name) async {
-    String path = await saveAndOpenFile(uri: url, name: name);
-    OpenFile.open(path);
+  void openDocument(DocumentModel doc) async {
+    if (doc.isExternal) {
+      final uri = Uri.parse(doc.document);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Toasts.showTostError(message: "Could not open link");
+      }
+    } else {
+      String path = await saveAndOpenFile(uri: doc.document, name: doc.documentName);
+      OpenFile.open(path);
+    }
   }
 }

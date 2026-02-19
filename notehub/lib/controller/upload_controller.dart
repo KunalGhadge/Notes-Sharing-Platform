@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
+import 'package:notehub/core/helper/image_helper.dart';
 import 'package:notehub/view/widgets/toasts.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
@@ -10,10 +11,12 @@ import 'package:file_picker/file_picker.dart';
 class UploadController extends GetxController {
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
+  var isExternalLink = false.obs;
 
   var nameEditingController = TextEditingController();
   var topicEditingController = TextEditingController();
   var descriptionEditingController = TextEditingController();
+  var linkEditingController = TextEditingController();
 
   var selectedDocument = Rxn<PlatformFile>();
   var selectedCover = Rxn<PlatformFile>();
@@ -38,8 +41,24 @@ class UploadController extends GetxController {
       return;
     }
 
-    if (selectedDocument.value == null || selectedCover.value == null) {
-      Toasts.showTostWarning(message: "Please select both document and cover");
+    if (isExternalLink.value) {
+      if (linkEditingController.text.isEmpty) {
+        Toasts.showTostWarning(message: "Please provide a link");
+        return;
+      }
+    } else {
+      if (selectedDocument.value == null) {
+        Toasts.showTostWarning(message: "Please select a document");
+        return;
+      }
+      if (selectedDocument.value!.size > 10 * 1024 * 1024) {
+        Toasts.showTostWarning(message: "Direct upload limit is 10MB. Use a Drive link for larger files.");
+        return;
+      }
+    }
+
+    if (selectedCover.value == null) {
+      Toasts.showTostWarning(message: "Please select a cover image");
       return;
     }
 
@@ -48,19 +67,35 @@ class UploadController extends GetxController {
       final userId = HiveBoxes.userId;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-      final docFile = File(selectedDocument.value!.path!);
-      final coverFile = File(selectedCover.value!.path!);
+      // 1. Compress and Upload Cover
+      File coverFile = File(selectedCover.value!.path!);
+      File? compressedCover = await ImageHelper.compressImage(coverFile);
 
-      final docExt = p.extension(docFile.path);
-      final docPath = '$userId/docs/${timestamp}_${nameEditingController.text}$docExt';
-      await supabase.storage.from('documents').upload(docPath, docFile);
-      final docUrl = supabase.storage.from('documents').getPublicUrl(docPath);
-
-      final coverExt = p.extension(coverFile.path);
-      final coverPath = '$userId/covers/${timestamp}_${nameEditingController.text}$coverExt';
-      await supabase.storage.from('documents').upload(coverPath, coverFile);
+      final coverPath = '$userId/covers/${timestamp}_${nameEditingController.text}.jpg';
+      await supabase.storage.from('documents').upload(
+        coverPath,
+        compressedCover ?? coverFile,
+        fileOptions: const FileOptions(contentType: 'image/jpeg'),
+      );
       final coverUrl = supabase.storage.from('documents').getPublicUrl(coverPath);
 
+      String docUrl = "";
+      String docName = "";
+
+      if (isExternalLink.value) {
+        docUrl = linkEditingController.text.trim();
+        docName = "External Link";
+      } else {
+        // 2. Upload Document
+        final docFile = File(selectedDocument.value!.path!);
+        final docExt = p.extension(docFile.path);
+        final docPath = '$userId/docs/${timestamp}_${nameEditingController.text}$docExt';
+        await supabase.storage.from('documents').upload(docPath, docFile);
+        docUrl = supabase.storage.from('documents').getPublicUrl(docPath);
+        docName = selectedDocument.value!.name;
+      }
+
+      // 3. Save to Database
       await supabase.from('documents').insert({
         'user_id': userId,
         'name': nameEditingController.text.trim(),
@@ -68,10 +103,11 @@ class UploadController extends GetxController {
         'description': descriptionEditingController.text.trim(),
         'document_url': docUrl,
         'cover_url': coverUrl,
-        'document_name': selectedDocument.value!.name,
+        'document_name': docName,
+        'is_external': isExternalLink.value,
       });
 
-      Toasts.showTostSuccess(message: "Document uploaded successfully!");
+      Toasts.showTostSuccess(message: "Document shared successfully!");
       clearForm();
       Get.back();
     } catch (e) {
@@ -86,6 +122,7 @@ class UploadController extends GetxController {
     nameEditingController.clear();
     topicEditingController.clear();
     descriptionEditingController.clear();
+    linkEditingController.clear();
     selectedDocument.value = null;
     selectedCover.value = null;
   }
