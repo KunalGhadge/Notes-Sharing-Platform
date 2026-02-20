@@ -22,9 +22,7 @@ class DocumentController extends GetxController {
 
       final userId = userResponse['id'];
       await fetchDocsByUserId(userId);
-    } catch (e) {
-
-    }
+    } catch (e) { /* silent */ }
   }
 
   Future<void> fetchDocsByUserId(String userId) async {
@@ -42,9 +40,7 @@ class DocumentController extends GetxController {
           .order('created_at', ascending: false);
 
       userDocs.value = _mapDocuments(response);
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }
@@ -167,9 +163,7 @@ class DocumentController extends GetxController {
         'document_id': docId,
         'type': type,
       });
-    } catch (e) {
-
-    }
+    } catch (e) { /* silent */ }
   }
 
   void openDocument(DocumentModel doc) async {

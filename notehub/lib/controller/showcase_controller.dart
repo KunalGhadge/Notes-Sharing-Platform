@@ -33,9 +33,7 @@ class ShowcaseController extends GetxController {
           .order('created_at', ascending: false);
 
       profilePosts.value = _mapDocuments(response);
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }
@@ -75,9 +73,7 @@ class ShowcaseController extends GetxController {
           .order('created_at', ascending: false);
 
       savedPosts.value = _mapDocuments(response);
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }

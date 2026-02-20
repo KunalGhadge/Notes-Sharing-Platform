@@ -6,6 +6,6 @@ class AppMetaData {
   static String supabaseAnonKey =
       "sb_publishable_s65w1XVsJwlDnix5_wJP6g_R8q52f_z";
 
-  static String avatar_url =
+  static String avatarUrl =
       "https://ui-avatars.com/api/?background=0d47a1&color=fff";
 }
