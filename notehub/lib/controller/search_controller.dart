@@ -35,9 +35,7 @@ class AppSearchController extends GetxController {
 
       final response = await request.order('created_at', ascending: false);
       results.value = _mapDocuments(response);
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }

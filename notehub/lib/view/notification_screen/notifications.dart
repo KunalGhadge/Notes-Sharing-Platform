@@ -49,7 +49,7 @@ class NotificationView extends StatelessWidget {
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(
                     notification.senderProfile == "NA"
-                    ? "${AppMetaData.avatar_url}&name=${notification.senderName}"
+                    ? "${AppMetaData.avatarUrl}&name=${notification.senderName}"
                     : notification.senderProfile
                   ),
                 ),

@@ -45,7 +45,7 @@ class DocumentModel {
 
   static String verifyProfile(String? profileUrl, String displayName) {
     if (profileUrl == null || profileUrl == "NA" || profileUrl.isEmpty) {
-      return "${AppMetaData.avatar_url}&name=$displayName";
+      return "${AppMetaData.avatarUrl}&name=$displayName";
     }
     return profileUrl;
   }

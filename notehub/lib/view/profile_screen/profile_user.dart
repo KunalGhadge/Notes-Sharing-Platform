@@ -160,7 +160,7 @@ class TopSection extends StatelessWidget {
         backgroundColor: PrimaryColor.shade100,
         backgroundImage: NetworkImage(
           profile == "" || profile == "NA"
-              ? "${AppMetaData.avatar_url}&name=$name"
+              ? "${AppMetaData.avatarUrl}&name=$name"
               : profile,
         ),
       ),

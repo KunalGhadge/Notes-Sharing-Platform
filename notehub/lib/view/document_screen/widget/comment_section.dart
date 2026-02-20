@@ -67,7 +67,7 @@ class CommentSection extends StatelessWidget {
                       radius: 18,
                       backgroundImage: NetworkImage(
                         comment.profileUrl == "NA"
-                        ? "${AppMetaData.avatar_url}&name=${comment.displayName}"
+                        ? "${AppMetaData.avatarUrl}&name=${comment.displayName}"
                         : comment.profileUrl
                       ),
                     ),

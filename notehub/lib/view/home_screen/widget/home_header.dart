@@ -116,7 +116,7 @@ class HomeHeader extends StatelessWidget {
         backgroundColor: Colors.white24,
         backgroundImage: NetworkImage(
           controller.user.value.profile == "NA"
-              ? "${AppMetaData.avatar_url}&name=${controller.user.value.displayName}"
+              ? "${AppMetaData.avatarUrl}&name=${controller.user.value.displayName}"
               : controller.user.value.profile,
         ),
       ),

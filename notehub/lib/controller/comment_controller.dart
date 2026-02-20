@@ -43,9 +43,7 @@ class CommentController extends GetxController {
           createdAt: DateTime.parse(c['created_at']),
         );
       }).toList();
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }
@@ -81,8 +79,6 @@ class CommentController extends GetxController {
         'type': type,
         'content': content,
       });
-    } catch (e) {
-
-    }
+    } catch (e) { /* silent */ }
   }
 }

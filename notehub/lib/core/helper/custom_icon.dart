@@ -13,7 +13,8 @@ class CustomIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return SvgPicture.asset(
       path,
-      color: color,
+      colorFilter:
+          color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
       height: size,
       width: size,
       fit: BoxFit.contain,
@@ -31,7 +32,7 @@ class CustomAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     String finalUrl = path;
     if (path == "" || path == "NA") {
-      finalUrl = "${AppMetaData.avatar_url}&name=${name ?? 'User'}";
+      finalUrl = "${AppMetaData.avatarUrl}&name=${name ?? 'User'}";
     }
 
     return CircleAvatar(

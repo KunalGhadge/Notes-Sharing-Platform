@@ -1,34 +1,35 @@
-name: Flutter CI
+name: Build Flutter APK
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: notehub
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/setup-java@v4
         with:
+          distribution: 'temurin'
+          java-version: '17'
 
+      - uses: subosito/flutter-action@v2
+        with:
           channel: 'stable'
-          channel: stable
 
 
-      - name: Flutter Doctor
-        run: flutter doctor
+      - run: flutter pub get
+      - run: flutter build apk --release
 
-      - name: Install dependencies
-        run: flutter pub get
-        working-directory: notehub
-
-      - name: Build APK
-        run: flutter build apk --debug
-        working-directory: notehub
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: notehub/build/app/outputs/flutter-apk/app-release.apk

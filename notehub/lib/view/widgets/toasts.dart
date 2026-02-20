@@ -30,18 +30,9 @@ class Toasts {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       borderRadius: BorderRadius.circular(12),
       showProgressBar: false,
-      closeButtonShowType: CloseButtonShowType.onHover,
       closeOnClick: false,
       pauseOnHover: true,
       dragToClose: true,
-      callbacks: ToastificationCallbacks(
-        onTap: (toastItem) => print('Toast ${toastItem.id} tapped'),
-        onCloseButtonTap: (toastItem) =>
-            print('Toast ${toastItem.id} close button tapped'),
-        onAutoCompleteCompleted: (toastItem) =>
-            print('Toast ${toastItem.id} auto complete completed'),
-        onDismissed: (toastItem) => print('Toast ${toastItem.id} dismissed'),
-      ),
     );
   }
 
@@ -70,18 +61,9 @@ class Toasts {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       borderRadius: BorderRadius.circular(12),
       showProgressBar: false,
-      closeButtonShowType: CloseButtonShowType.onHover,
       closeOnClick: false,
       pauseOnHover: true,
       dragToClose: true,
-      callbacks: ToastificationCallbacks(
-        onTap: (toastItem) => print('Toast ${toastItem.id} tapped'),
-        onCloseButtonTap: (toastItem) =>
-            print('Toast ${toastItem.id} close button tapped'),
-        onAutoCompleteCompleted: (toastItem) =>
-            print('Toast ${toastItem.id} auto complete completed'),
-        onDismissed: (toastItem) => print('Toast ${toastItem.id} dismissed'),
-      ),
     );
   }
 
@@ -110,18 +92,9 @@ class Toasts {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       borderRadius: BorderRadius.circular(12),
       showProgressBar: false,
-      closeButtonShowType: CloseButtonShowType.onHover,
       closeOnClick: false,
       pauseOnHover: true,
       dragToClose: true,
-      callbacks: ToastificationCallbacks(
-        onTap: (toastItem) => print('Toast ${toastItem.id} tapped'),
-        onCloseButtonTap: (toastItem) =>
-            print('Toast ${toastItem.id} close button tapped'),
-        onAutoCompleteCompleted: (toastItem) =>
-            print('Toast ${toastItem.id} auto complete completed'),
-        onDismissed: (toastItem) => print('Toast ${toastItem.id} dismissed'),
-      ),
     );
   }
 }

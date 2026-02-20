@@ -49,9 +49,7 @@ class NotificationController extends GetxController {
           isRead: n['is_read'],
         );
       }).toList();
-    } catch (e) {
-
-    } finally {
+    } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }
