@@ -136,7 +136,7 @@ class UploadController extends GetxController {
       clearForm();
       Get.back();
     } catch (e) {
-      print("Upload error: $e");
+
       Toasts.showTostError(message: "We encountered an issue while saving your notes. Please try again in a moment.");
     } finally {
       isLoading.value = false;

@@ -39,7 +39,7 @@ class ConnectionController extends GetxController {
         ));
       }
     } catch (e) {
-      print("Error fetching connections: $e");
+
       Toasts.showTostError(message: "Error fetching ${type.name}");
     } finally {
       isLoading.value = false;

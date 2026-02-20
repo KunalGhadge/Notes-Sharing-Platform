@@ -29,7 +29,7 @@ class HomeController extends GetxController {
       updates.value = _mapDocuments(response);
       update();
     } catch (e) {
-      print("HomeController Error: $e");
+
       Toasts.showTostError(message: "We're currently unable to refresh the feed. Please check your connection.");
     } finally {
       isLoading.value = false;

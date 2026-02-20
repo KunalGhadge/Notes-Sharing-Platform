@@ -18,7 +18,7 @@ class BottomFooter extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             spreadRadius: 2,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -87,7 +87,7 @@ class BottomFooter extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isSelected ? PrimaryColor.shade500.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? PrimaryColor.shade500.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Icon(

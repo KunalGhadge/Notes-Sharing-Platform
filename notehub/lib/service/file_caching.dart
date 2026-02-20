@@ -22,7 +22,7 @@ Future<String> saveAndOpenFile(
   try {
     await dio.download(uri, savePath);
   } catch (error) {
-    print("Error downloading file $uri");
+
     Toasts.showTostError(message: "Unable to open file");
   }
 

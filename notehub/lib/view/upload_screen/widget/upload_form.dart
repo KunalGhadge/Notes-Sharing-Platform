@@ -94,7 +94,7 @@ class UploadForm extends StatelessWidget {
           color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
               : [],
         ),
         child: Center(
@@ -124,7 +124,7 @@ class UploadForm extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: PrimaryColor.shade100.withOpacity(0.5),
+            color: PrimaryColor.shade100.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: PrimaryColor.shade200),
           ),

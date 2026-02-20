@@ -50,7 +50,7 @@ class NotificationController extends GetxController {
         );
       }).toList();
     } catch (e) {
-      print("Notifications error: $e");
+
     } finally {
       isLoading.value = false;
     }
