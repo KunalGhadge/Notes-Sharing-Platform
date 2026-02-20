@@ -44,7 +44,7 @@ class CommentController extends GetxController {
         );
       }).toList();
     } catch (e) {
-      print("Comments error: $e");
+
     } finally {
       isLoading.value = false;
     }
@@ -82,7 +82,7 @@ class CommentController extends GetxController {
         'content': content,
       });
     } catch (e) {
-      print("Notification error: $e");
+
     }
   }
 }

@@ -59,7 +59,7 @@ class ProfileController extends GetxController {
         await HiveBoxes.setUser(user.value);
       }
     } catch (e) {
-      print("Error fetching profile: $e");
+
     } finally {
       isLoading.value = false;
     }

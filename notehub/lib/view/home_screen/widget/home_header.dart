@@ -23,7 +23,7 @@ class HomeHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: PrimaryColor.shade500.withOpacity(0.2),
+                  color: PrimaryColor.shade500.withValues(alpha: 0.2),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -44,7 +44,7 @@ class HomeHeader extends StatelessWidget {
                             Text(
                               "Hello,",
                               style: AppTypography.subHead2.copyWith(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                               ),
                             ),
                             Text(
@@ -69,7 +69,7 @@ class HomeHeader extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.notifications_none, color: Colors.white),
@@ -83,7 +83,7 @@ class HomeHeader extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(

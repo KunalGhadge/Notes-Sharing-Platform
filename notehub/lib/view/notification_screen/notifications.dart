@@ -44,7 +44,7 @@ class NotificationView extends StatelessWidget {
           itemBuilder: (context, index) {
             final notification = controller.notifications[index];
             return Container(
-              color: notification.isRead ? Colors.transparent : PrimaryColor.shade100.withOpacity(0.3),
+              color: notification.isRead ? Colors.transparent : PrimaryColor.shade100.withValues(alpha: 0.3),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(

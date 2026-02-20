@@ -67,7 +67,7 @@ class ProfileUserController extends GetxController {
         isFollowedByUser: isFollowed,
       );
     } catch (error) {
-      print("Error in fetching user data: ${error.toString()}");
+
     } finally {
       isLoading.value = false;
     }
@@ -100,7 +100,7 @@ class ProfileUserController extends GetxController {
       return true;
     } catch (e) {
       Toasts.showTostError(message: "Unable to take action");
-      print("Error in following $username: $e");
+
       return false;
     } finally {
       isLoading.value = false;

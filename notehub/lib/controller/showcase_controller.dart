@@ -34,7 +34,7 @@ class ShowcaseController extends GetxController {
 
       profilePosts.value = _mapDocuments(response);
     } catch (e) {
-      print("Error fetching profile posts: $e");
+
     } finally {
       isLoading.value = false;
     }
@@ -76,7 +76,7 @@ class ShowcaseController extends GetxController {
 
       savedPosts.value = _mapDocuments(response);
     } catch (e) {
-      print("Error fetching saved posts: $e");
+
     } finally {
       isLoading.value = false;
     }

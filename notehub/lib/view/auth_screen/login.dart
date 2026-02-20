@@ -51,7 +51,7 @@ class _LoginState extends State<Login> {
               builder: (controller) => controller.isLoading.value
                   ? Positioned.fill(
                       child: Container(
-                        color: GrayscaleBlackColors.lightBlack.withOpacity(.5),
+                        color: GrayscaleBlackColors.lightBlack.withValues(alpha: .5),
                         child: Center(
                           child: CircularProgressIndicator(
                             color: OtherColors.tigerLily,

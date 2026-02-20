@@ -23,7 +23,7 @@ class DocumentController extends GetxController {
       final userId = userResponse['id'];
       await fetchDocsByUserId(userId);
     } catch (e) {
-      print("Error fetching docs for $username: $e");
+
     }
   }
 
@@ -43,7 +43,7 @@ class DocumentController extends GetxController {
 
       userDocs.value = _mapDocuments(response);
     } catch (e) {
-      print("Error fetching docs: $e");
+
     } finally {
       isLoading.value = false;
     }
@@ -168,7 +168,7 @@ class DocumentController extends GetxController {
         'type': type,
       });
     } catch (e) {
-      print("Notification error: $e");
+
     }
   }
 
