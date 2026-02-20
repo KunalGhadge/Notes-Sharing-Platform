@@ -2,7 +2,6 @@ import 'package:flutter/material.dart' hide SearchController;
 import 'package:get/get.dart';
 import 'package:notehub/controller/search_controller.dart';
 import 'package:notehub/core/config/color.dart';
-import 'package:notehub/core/config/typography.dart';
 import 'package:notehub/view/widgets/post_card.dart';
 
 class SearchView extends StatelessWidget {

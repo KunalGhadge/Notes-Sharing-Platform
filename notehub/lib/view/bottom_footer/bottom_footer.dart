@@ -4,7 +4,6 @@ import 'package:notehub/controller/bottom_navigation_controller.dart';
 import 'package:notehub/controller/profile_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/helper/custom_icon.dart';
-import 'package:notehub/core/meta/app_meta.dart';
 
 class BottomFooter extends StatelessWidget {
   const BottomFooter({super.key});

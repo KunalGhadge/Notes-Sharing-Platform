@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
-import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/connection_screen/connection.dart';
 import 'package:notehub/view/profile_screen/widget/follower_widget.dart';

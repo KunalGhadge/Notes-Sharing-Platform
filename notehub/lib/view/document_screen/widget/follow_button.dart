@@ -4,7 +4,6 @@ import 'package:notehub/controller/profile_user_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
 import 'package:notehub/model/document_model.dart';
-import 'package:notehub/view/widgets/loader.dart';
 
 class FollowButton extends StatefulWidget {
   final DocumentModel document;

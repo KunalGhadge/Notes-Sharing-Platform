@@ -26,9 +26,21 @@ class ProfileController extends GetxController {
 
       final userId = profileData['id'];
 
-      final docs = await supabase.from('documents').select('id').eq('user_id', userId);
-      final followers = await supabase.from('follows').select('follower_id').eq('following_id', userId);
-      final following = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+      final docsRes = await supabase
+          .from('documents')
+          .select('id')
+          .eq('user_id', userId)
+          .count(CountOption.exact);
+      final followersRes = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', userId)
+          .count(CountOption.exact);
+      final followingRes = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', userId)
+          .count(CountOption.exact);
 
       user.value = UserModel(
         id: userId,
@@ -36,10 +48,11 @@ class ProfileController extends GetxController {
         username: profileData['username'],
         institute: profileData['institute'] ?? "Mumbai University",
         profile: profileData['profile_url'] ?? "NA",
-        documents: (docs as List).length,
-        followers: (followers as List).length,
-        following: (following as List).length,
-        academicInterests: List<String>.from(profileData['academic_interests'] ?? []),
+        documents: docsRes.count,
+        followers: followersRes.count,
+        following: followingRes.count,
+        academicInterests:
+            List<String>.from(profileData['academic_interests'] ?? []),
       );
 
       if (username == HiveBoxes.username) {

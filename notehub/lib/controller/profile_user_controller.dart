@@ -39,9 +39,21 @@ class ProfileUserController extends GetxController {
 
       final isFollowed = followResponse != null;
 
-      final docs = await supabase.from('documents').select('id').eq('user_id', userId);
-      final followers = await supabase.from('follows').select('follower_id').eq('following_id', userId);
-      final following = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+      final docsRes = await supabase
+          .from('documents')
+          .select('id')
+          .eq('user_id', userId)
+          .count(CountOption.exact);
+      final followersRes = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', userId)
+          .count(CountOption.exact);
+      final followingRes = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', userId)
+          .count(CountOption.exact);
 
       profileData.value = UserModel(
         id: userId,
@@ -49,9 +61,9 @@ class ProfileUserController extends GetxController {
         username: profileResponse['username'],
         profile: profileResponse['profile_url'] ?? "NA",
         institute: profileResponse['institute'] ?? "Mumbai University",
-        followers: (followers as List).length,
-        following: (following as List).length,
-        documents: (docs as List).length,
+        followers: followersRes.count,
+        following: followingRes.count,
+        documents: docsRes.count,
         isFollowedByUser: isFollowed,
       );
     } catch (error) {

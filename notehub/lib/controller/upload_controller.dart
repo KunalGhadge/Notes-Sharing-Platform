@@ -67,12 +67,14 @@ class UploadController extends GetxController {
     try {
       final userId = HiveBoxes.userId;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final sanitizedName =
+          nameEditingController.text.replaceAll(RegExp(r'[^\w\s\-]'), '_');
 
       // 1. Compress and Upload Cover
       File coverFile = File(selectedCover.value!.path!);
       File? compressedCover = await ImageHelper.compressImage(coverFile);
 
-      final coverPath = '$userId/covers/${timestamp}_${nameEditingController.text}.jpg';
+      final coverPath = '$userId/covers/${timestamp}_$sanitizedName.jpg';
 
       try {
         await supabase.storage.from('documents').upload(
@@ -101,7 +103,7 @@ class UploadController extends GetxController {
         // 2. Upload Document
         final docFile = File(selectedDocument.value!.path!);
         final docExt = p.extension(docFile.path);
-        final docPath = '$userId/docs/${timestamp}_${nameEditingController.text}$docExt';
+        final docPath = '$userId/docs/${timestamp}_$sanitizedName$docExt';
 
         try {
           await supabase.storage.from('documents').upload(docPath, docFile);
