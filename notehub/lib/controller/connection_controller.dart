@@ -29,11 +29,12 @@ class ConnectionController extends GetxController {
       }
 
       usersData.clear();
-      for (var item in response) {
+      for (var item in (response as List)) {
         final profile = item['profiles'];
+        if (profile == null) continue;
         usersData.add(MiniUserModel(
           displayName: profile['display_name'] ?? "User",
-          username: profile['username'],
+          username: profile['username'] ?? "unknown",
           profile: profile['profile_url'] ?? "NA",
           isFollowedByUser: type == ConnectionType.following,
         ));
