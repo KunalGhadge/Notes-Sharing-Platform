@@ -132,6 +132,7 @@ BEGIN
         CREATE POLICY "Users can view their own notifications." ON public.notifications FOR SELECT USING (auth.uid() = receiver_id);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'System can insert notifications.') THEN
+        -- Allow insertion for system-generated notifications triggered by other users
         CREATE POLICY "System can insert notifications." ON public.notifications FOR INSERT WITH CHECK (true);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'Users can mark as read.') THEN
@@ -206,6 +207,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents SET dislikes_count = dislikes_count - 1 WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- 10. Automatically create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
@@ -213,7 +221,7 @@ BEGIN
   INSERT INTO public.profiles (id, username, display_name, institute)
   VALUES (
     new.id,
-    new.email,
+    COALESCE(new.email, 'user_' || substr(new.id::text, 1, 8)),
     COALESCE(new.raw_user_meta_data->>'display_name', 'User'),
     COALESCE(new.raw_user_meta_data->>'institute', 'Mumbai University')
   )
@@ -227,10 +235,3 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id UUID)
-RETURNS void AS $$
-BEGIN
-  UPDATE public.documents SET dislikes_count = dislikes_count - 1 WHERE id = doc_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;

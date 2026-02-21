@@ -24,11 +24,21 @@ void main() async {
   const initSettings = InitializationSettings(android: android);
   await flutterLocalNotificationsPlugin.initialize(settings: initSettings);
 
+  // Create Android Notification Channel
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'notes_channel',
+    'Notes Notifications',
+    importance: Importance.max,
+  );
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
   await Hive.initFlutter();
   Hive.registerAdapter(UserModelAdapter());
   await Hive.openBox<UserModel>("user");
   Get.put(BottomNavigationController());
-  Get.put(ShowcaseController());
   Get.put(NotificationController());
   runApp(const MyApp());
 }

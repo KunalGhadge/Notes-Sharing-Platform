@@ -82,6 +82,10 @@ The app uses Supabase Realtime to show local push notifications on your device.
 
 ---
 **Need Help?**
-*   **"Grey Space" or Blank Screens:** This usually means the database is empty or the schema wasn't fully applied. Run Step 2 again.
+*   **"Failed to update profile" or "Error saving notes":**
+    1. This often happens if the `profiles` table is empty. Try clicking **Edit Profile** and **Save** again—the app will now attempt to automatically fix your profile record.
+    2. Ensure you have run **Step 2 (SQL Schema)** correctly.
+    3. Check **Step 3 (Storage Policies)**—without these, you cannot upload any files!
+*   **"No Notifications":** Make sure you have enabled **Replication** for the `notifications` table in the Supabase Dashboard (Step 6).
+*   **"Grey Space" or Blank Screens:** This means there are no notes in the database yet. Try uploading one!
 *   **"Registration failed":** Check if you have enabled Email Auth in your Supabase project.
-*   **"Error saving notes":** Make sure the `documents` bucket exists and has the correct policies from Step 3.

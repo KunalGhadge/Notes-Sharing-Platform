@@ -6,6 +6,7 @@ import 'package:notehub/core/config/color.dart';
 
 import 'package:notehub/view/widgets/post_card.dart';
 import 'package:notehub/view/widgets/refresher_widget.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomeDocumentSection extends StatelessWidget {
   const HomeDocumentSection({super.key});
@@ -25,7 +26,22 @@ class HomeDocumentSection extends StatelessWidget {
       child: GetX<HomeController>(
         builder: (controller) {
           if (controller.isLoading.value) {
-            return const SizedBox.shrink();
+            return ListView.builder(
+              itemCount: 3,
+              itemBuilder: (context, index) => Shimmer.fromColors(
+                baseColor: GrayscaleWhiteColors.almostWhite,
+                highlightColor: GrayscaleWhiteColors.white,
+                child: Container(
+                  height: 200,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            );
           }
 
           if (controller.updates.isEmpty) {

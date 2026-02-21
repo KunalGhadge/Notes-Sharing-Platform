@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:notehub/controller/notification_controller.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/layout.dart';
 import 'package:notehub/model/user_model.dart';
@@ -48,18 +49,27 @@ class AuthController extends GetxController {
 
       if (response.user != null) {
         await fetchAndStoreProfile(response.user!);
+ fix-auth-registration-issue-15629369363913246465
+        // Restart notification listener for new user
+        Get.find<NotificationController>().listenToNotifications();
+
         if (HiveBoxes.userId.isEmpty) {
           Toasts.showTostError(
               message:
                   "Failed to sync local session. Please try logging in again.");
           return;
         }
+    main
         Get.offAll(() => const Layout());
       }
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
+ fix-auth-registration-issue-15629369363913246465
+      Toasts.showTostError(message: "Login failed: ${error.toString()}");
+
       Toasts.showTostError(message: "An unexpected error occurred: $error");
+ main
     } finally {
       isLoading.value = false;
     }
@@ -90,24 +100,36 @@ class AuthController extends GetxController {
           });
 
           await fetchAndStoreProfile(response.user!);
+ fix-auth-registration-issue-15629369363913246465
+          // Restart notification listener for new user
+          Get.find<NotificationController>().listenToNotifications();
+
           if (HiveBoxes.userId.isEmpty) {
             Toasts.showTostError(
                 message:
                     "Registration successful, but session sync failed. Please log in.");
             return;
           }
+ main
           Toasts.showTostSuccess(message: "Registration successful!");
           Get.offAll(() => const Layout());
         } else {
           Toasts.showTostSuccess(
               message: "Please check your email to confirm your account!");
-          isRegister.value = false; // Switch back to login for when they return
+          // Give them a moment to read the success message before switching
+          Future.delayed(const Duration(seconds: 2), () {
+            isRegister.value = false; // Switch back to login for when they return
+          });
         }
       }
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
+ fix-auth-registration-issue-15629369363913246465
+      Toasts.showTostError(message: "Registration failed: ${error.toString()}");
+
       Toasts.showTostError(message: "Registration failed: $error");
+ main
     } finally {
       isLoading.value = false;
     }
@@ -150,7 +172,7 @@ class AuthController extends GetxController {
       );
       await HiveBoxes.setUser(newUser);
     } catch (e) {
-      Toasts.showTostError(message: "Failed to load user profile");
+      Toasts.showTostError(message: "Failed to load user profile: ${e.toString()}");
     }
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notehub/view/profile_screen/widget/post_renderer.dart';
-import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 
@@ -48,7 +47,6 @@ class _ProfileShowcaseState extends State<ProfileShowcase>
 
   @override
   Widget build(BuildContext context) {
-    final showcaseController = Get.find<ShowcaseController>(tag: widget.username);
     return Column(
       children: [
         Obx(
@@ -74,15 +72,15 @@ class _ProfileShowcaseState extends State<ProfileShowcase>
           child: TabBarView(
             controller: _tabController,
             children: [
-              Obx(() => PostsRenderer(
+              PostsRenderer(
                 usernameTag: widget.username!,
-                posts: showcaseController.profilePosts,
-              )),
+                isSaved: false,
+              ),
               if (HiveBoxes.username == widget.username)
-                Obx(() => PostsRenderer(
+                PostsRenderer(
                   usernameTag: widget.username!,
-                  posts: showcaseController.savedPosts,
-                )),
+                  isSaved: true,
+                ),
             ],
           ),
         ),

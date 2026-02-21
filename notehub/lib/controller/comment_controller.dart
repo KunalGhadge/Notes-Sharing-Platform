@@ -68,7 +68,13 @@ class CommentController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Could not post comment: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
+      String msg = "Failed to post comment";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
+
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 

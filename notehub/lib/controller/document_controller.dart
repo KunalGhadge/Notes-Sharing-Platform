@@ -115,7 +115,13 @@ class DocumentController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Could not update like: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
+      String msg = "Failed to update like";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
+
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 
@@ -148,7 +154,13 @@ class DocumentController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Could not update dislike: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
+      String msg = "Failed to update dislike";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
+
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 
@@ -175,7 +187,13 @@ class DocumentController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Action failed: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
+      String msg = "Failed to update bookmark";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
+
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 

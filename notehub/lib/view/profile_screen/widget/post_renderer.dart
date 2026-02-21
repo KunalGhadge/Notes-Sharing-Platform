@@ -3,20 +3,21 @@ import 'package:get/get.dart';
 import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
-import 'package:notehub/model/document_model.dart';
 import 'package:notehub/view/widgets/document_card.dart';
 import 'package:shimmer/shimmer.dart';
 
 class PostsRenderer extends StatelessWidget {
-  final List<DocumentModel> posts;
+  final bool isSaved;
   final String usernameTag;
   const PostsRenderer(
-      {super.key, required this.posts, required this.usernameTag});
+      {super.key, required this.isSaved, required this.usernameTag});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ShowcaseController>(tag: usernameTag);
     return Obx(() {
+      final posts = isSaved ? controller.savedPosts : controller.profilePosts;
+
       if (controller.isLoading.value) {
         return Container(
           margin: const EdgeInsets.only(top: 15),

@@ -60,13 +60,54 @@ class ProfileController extends GetxController {
       if (username == HiveBoxes.username) {
         await HiveBoxes.setUser(user.value);
       }
+ fix-auth-registration-issue-15629369363913246465
+    } catch (e) {
+      if (username == HiveBoxes.username) {
+        // Try to recover profile if it's missing but user is logged in
+        await ensureProfileExists();
+      }
+    } finally {
+
     } catch (e) {/* silent */} finally {
+ main
       isLoading.value = false;
     }
   }
 
+ fix-auth-registration-issue-15629369363913246465
+  Future<void> ensureProfileExists() async {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty) return;
+
+    try {
+      final profileData = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (profileData == null) {
+        final currentUser = supabase.auth.currentUser;
+        if (currentUser != null) {
+          final metadata = currentUser.userMetadata ?? {};
+          await supabase.from('profiles').upsert({
+            'id': currentUser.id,
+            'username': currentUser.email ?? "user_${currentUser.id.substring(0, 5)}",
+            'display_name': metadata['display_name'] ?? "User",
+            'institute': metadata['institute'] ?? "Mumbai University",
+          });
+          // Fetch again after creation
+          await fetchUserData(username: HiveBoxes.username);
+        }
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  Future<void> updateProfile({String? name, String? institute, List<String>? interests}) async {
+
   Future<void> updateProfile(
       {String? name, String? institute, List<String>? interests}) async {
+ main
     isLoading.value = true;
     try {
       final session = supabase.auth.currentSession;
@@ -95,7 +136,13 @@ class ProfileController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Failed to update profile: ${e.message}");
     } catch (e) {
-      Toasts.showTostError(message: "An unexpected error occurred: $e");
+      String msg = "Failed to update profile";
+      if (e is PostgrestException) {
+        msg = e.message;
+        // If it's a foreign key error or missing row, try to create it
+        await ensureProfileExists();
+      }
+      Toasts.showTostError(message: msg);
     } finally {
       isLoading.value = false;
     }

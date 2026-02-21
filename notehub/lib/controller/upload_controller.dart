@@ -176,7 +176,14 @@ class UploadController extends GetxController {
     } on PostgrestException catch (e) {
       Toasts.showTostError(message: "Database error: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
+      String msg = "We encountered an issue while saving your notes. Please try again in a moment.";
+      if (e is PostgrestException) msg = e.message;
+      if (e is StorageException) msg = "Storage Error: ${e.message}";
+      Toasts.showTostError(message: msg);
+
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     } finally {
       isLoading.value = false;
     }
