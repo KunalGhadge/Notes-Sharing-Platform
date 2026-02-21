@@ -1,12 +1,15 @@
--- SUPABASE SCHEMA FOR SERIOUS STUDY (PRODUCTION READY)
+-- SUPABASE SCHEMA FOR SERIOUS STUDY (PRODUCTION READY & BULLETPROOF)
 
--- 1. Profiles Table
+-- 1. Enable Extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. Profiles Table
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   display_name TEXT,
   institute TEXT DEFAULT 'Mumbai University',
-  academic_interests TEXT[],
+  academic_interests TEXT[] DEFAULT '{}',
   profile_url TEXT,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -16,18 +19,21 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public profiles are viewable by everyone.') THEN
+    -- Select Policy
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Public profiles are viewable by everyone.') THEN
         CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles FOR SELECT USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own profile.') THEN
-        CREATE POLICY "Users can insert their own profile." ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+    -- Insert Policy (Needed for Registration)
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can insert their own profile.') THEN
+        CREATE POLICY "Users can insert their own profile." ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id OR auth.uid() IS NULL);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update own profile.') THEN
+    -- Update Policy
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can update own profile.') THEN
         CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USING (auth.uid() = id);
     END IF;
 END $$;
 
--- 2. Documents Table
+-- 3. Documents Table
 CREATE TABLE IF NOT EXISTS public.documents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -47,18 +53,18 @@ ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Documents are viewable by everyone.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'documents' AND policyname = 'Documents are viewable by everyone.') THEN
         CREATE POLICY "Documents are viewable by everyone." ON public.documents FOR SELECT USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can upload their own documents.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'documents' AND policyname = 'Users can upload their own documents.') THEN
         CREATE POLICY "Users can upload their own documents." ON public.documents FOR INSERT WITH CHECK (auth.uid() = user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete their own documents.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'documents' AND policyname = 'Users can delete their own documents.') THEN
         CREATE POLICY "Users can delete their own documents." ON public.documents FOR DELETE USING (auth.uid() = user_id);
     END IF;
 END $$;
 
--- 3. Comments Table
+-- 4. Comments Table
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   document_id UUID REFERENCES public.documents(id) ON DELETE CASCADE NOT NULL,
@@ -71,15 +77,15 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Comments are viewable by everyone.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'comments' AND policyname = 'Comments are viewable by everyone.') THEN
         CREATE POLICY "Comments are viewable by everyone." ON public.comments FOR SELECT USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can post comments.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'comments' AND policyname = 'Users can post comments.') THEN
         CREATE POLICY "Users can post comments." ON public.comments FOR INSERT WITH CHECK (auth.uid() = user_id);
     END IF;
 END $$;
 
--- 4. Likes & Dislikes Table
+-- 5. Interactions (Likes & Dislikes)
 CREATE TABLE IF NOT EXISTS public.interactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -92,27 +98,27 @@ ALTER TABLE public.interactions ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Interactions are viewable by everyone.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'interactions' AND policyname = 'Interactions are viewable by everyone.') THEN
         CREATE POLICY "Interactions are viewable by everyone." ON public.interactions FOR SELECT USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can interact.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'interactions' AND policyname = 'Users can interact.') THEN
         CREATE POLICY "Users can interact." ON public.interactions FOR INSERT WITH CHECK (auth.uid() = user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can remove interaction.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'interactions' AND policyname = 'Users can remove interaction.') THEN
         CREATE POLICY "Users can remove interaction." ON public.interactions FOR DELETE USING (auth.uid() = user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update interaction.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'interactions' AND policyname = 'Users can update interaction.') THEN
         CREATE POLICY "Users can update interaction." ON public.interactions FOR UPDATE USING (auth.uid() = user_id);
     END IF;
 END $$;
 
--- 5. Notifications Table
+-- 6. Notifications Table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   receiver_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   sender_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   document_id UUID REFERENCES public.documents(id) ON DELETE CASCADE,
-  type TEXT NOT NULL, -- 'like', 'comment', 'new_post', 'follow'
+  type TEXT NOT NULL,
   content TEXT,
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -122,12 +128,18 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view their own notifications.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'Users can view their own notifications.') THEN
         CREATE POLICY "Users can view their own notifications." ON public.notifications FOR SELECT USING (auth.uid() = receiver_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'System can insert notifications.') THEN
+        CREATE POLICY "System can insert notifications." ON public.notifications FOR INSERT WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'Users can mark as read.') THEN
+        CREATE POLICY "Users can mark as read." ON public.notifications FOR UPDATE USING (auth.uid() = receiver_id);
     END IF;
 END $$;
 
--- 6. Bookmarks
+-- 7. Bookmarks
 CREATE TABLE IF NOT EXISTS public.bookmarks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -139,18 +151,18 @@ ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view their own bookmarks.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bookmarks' AND policyname = 'Users can view their own bookmarks.') THEN
         CREATE POLICY "Users can view their own bookmarks." ON public.bookmarks FOR SELECT USING (auth.uid() = user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can create bookmarks.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bookmarks' AND policyname = 'Users can create bookmarks.') THEN
         CREATE POLICY "Users can create bookmarks." ON public.bookmarks FOR INSERT WITH CHECK (auth.uid() = user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete bookmarks.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bookmarks' AND policyname = 'Users can delete bookmarks.') THEN
         CREATE POLICY "Users can delete bookmarks." ON public.bookmarks FOR DELETE USING (auth.uid() = user_id);
     END IF;
 END $$;
 
--- 7. Follows
+-- 8. Follows
 CREATE TABLE IF NOT EXISTS public.follows (
   follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   following_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -161,59 +173,68 @@ ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Follows are viewable by everyone.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'follows' AND policyname = 'Follows are viewable by everyone.') THEN
         CREATE POLICY "Follows are viewable by everyone." ON public.follows FOR SELECT USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can follow others.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'follows' AND policyname = 'Users can follow others.') THEN
         CREATE POLICY "Users can follow others." ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can unfollow others.') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'follows' AND policyname = 'Users can unfollow others.') THEN
         CREATE POLICY "Users can unfollow others." ON public.follows FOR DELETE USING (auth.uid() = follower_id);
     END IF;
 END $$;
 
--- Functions for Atomic Increments
+-- 9. Atomic Increment Functions (SECURITY DEFINER to bypass RLS)
 CREATE OR REPLACE FUNCTION increment_likes(doc_id UUID)
 RETURNS void AS $$
 BEGIN
   UPDATE public.documents SET likes_count = likes_count + 1 WHERE id = doc_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION decrement_likes(doc_id UUID)
 RETURNS void AS $$
 BEGIN
   UPDATE public.documents SET likes_count = likes_count - 1 WHERE id = doc_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION increment_dislikes(doc_id UUID)
 RETURNS void AS $$
 BEGIN
   UPDATE public.documents SET dislikes_count = dislikes_count + 1 WHERE id = doc_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id UUID)
 RETURNS void AS $$
 BEGIN
   UPDATE public.documents SET dislikes_count = dislikes_count - 1 WHERE id = doc_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 8. Storage Policies (Run after creating 'documents' bucket)
--- Enable RLS on storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
+-- 10. Storage Policies (Check for storage.objects existence)
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Access') THEN
-        CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'documents');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can upload their own files') THEN
-        CREATE POLICY "Users can upload their own files" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete their own files') THEN
-        CREATE POLICY "Users can delete their own files" ON storage.objects FOR DELETE USING (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
+
+        -- Enable RLS
+        ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+        -- Public Access
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Public Access') THEN
+            CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'documents');
+        END IF;
+
+        -- Upload Policy
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Users can upload their own files') THEN
+            CREATE POLICY "Users can upload their own files" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+        END IF;
+
+        -- Delete Policy
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Users can delete their own files') THEN
+            CREATE POLICY "Users can delete their own files" ON storage.objects FOR DELETE USING (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+        END IF;
+
     END IF;
 END $$;

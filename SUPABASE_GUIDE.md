@@ -24,6 +24,10 @@ You need to create the tables and set up the security rules (Row Level Security)
 
 This will create all the tables (`profiles`, `documents`, `comments`, etc.), the security policies, and the functions for likes/dislikes.
 
+**Troubleshooting SQL Errors:**
+*   **"Relation storage.objects does not exist":** This is common in brand new projects. To fix it, go to **Storage** and create the `documents` bucket first (Step 3 below), then come back and run the SQL script again.
+*   **"Permission Denied":** Ensure you are running the script in the **SQL Editor** while logged in as the project owner.
+
 ## 3. Storage Setup (For Documents & Covers)
 The app needs a place to store the uploaded PDF files and cover images.
 

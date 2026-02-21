@@ -17,8 +17,9 @@ class ShowcaseController extends GetxController {
           .from('profiles')
           .select('id')
           .eq('username', username)
-          .single();
+          .maybeSingle();
 
+      if (userResponse == null) return;
       final userId = userResponse['id'];
 
       final response = await supabase
@@ -45,8 +46,9 @@ class ShowcaseController extends GetxController {
           .from('profiles')
           .select('id')
           .eq('username', username)
-          .single();
+          .maybeSingle();
 
+      if (userResponse == null) return;
       final userId = userResponse['id'];
 
       final bookmarkResponse = await supabase
@@ -82,8 +84,9 @@ class ShowcaseController extends GetxController {
     final List<DocumentModel> tmp = [];
     final currentUserId = HiveBoxes.userId;
 
-    for (var doc in response) {
+    for (var doc in (response as List)) {
       final profile = doc['profiles'];
+      if (profile == null) continue;
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 
