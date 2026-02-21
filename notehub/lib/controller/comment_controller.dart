@@ -53,6 +53,10 @@ class CommentController extends GetxController {
 
     try {
       final userId = HiveBoxes.userId;
+      if (userId.isEmpty) {
+        Toasts.showTostError(message: "Please log in to post comments");
+        return;
+      }
       await supabase.from('comments').insert({
         'document_id': docId,
         'user_id': userId,
@@ -76,7 +80,7 @@ class CommentController extends GetxController {
 
       final receiverId = docData['user_id'];
       final senderId = HiveBoxes.userId;
-      if (receiverId == senderId) return;
+      if (senderId.isEmpty || receiverId == senderId) return;
 
       await supabase.from('notifications').insert({
         'receiver_id': receiverId,

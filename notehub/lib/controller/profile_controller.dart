@@ -47,7 +47,7 @@ class ProfileController extends GetxController {
       user.value = UserModel(
         id: userId,
         displayName: profileData['display_name'] ?? "User",
-        username: profileData['username'],
+        username: profileData['username'] ?? username,
         institute: profileData['institute'] ?? "Mumbai University",
         profile: profileData['profile_url'] ?? "NA",
         documents: docsRes.count,
@@ -69,6 +69,10 @@ class ProfileController extends GetxController {
     isLoading.value = true;
     try {
       final userId = HiveBoxes.userId;
+      if (userId.isEmpty) {
+        Toasts.showTostError(message: "Session expired. Please log in again.");
+        return;
+      }
       await supabase.from('profiles').update({
         if (name != null) 'display_name': name,
         if (institute != null) 'institute': institute,

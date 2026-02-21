@@ -12,7 +12,6 @@ class HomeController extends GetxController {
   var updates = <DocumentModel>[].obs;
 
   Future<void> fetchUpdates() async {
-    isFetched.value = true;
     isLoading.value = true;
     try {
       final response = await supabase
@@ -27,6 +26,7 @@ class HomeController extends GetxController {
           .limit(50);
 
       updates.value = _mapDocuments(response as List);
+      isFetched.value = true;
       update();
     } catch (e) {
       Toasts.showTostError(
