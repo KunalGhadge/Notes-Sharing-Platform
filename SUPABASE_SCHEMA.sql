@@ -212,29 +212,3 @@ BEGIN
   UPDATE public.documents SET dislikes_count = dislikes_count - 1 WHERE id = doc_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 10. Storage Policies (Check for storage.objects existence)
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
-
-        -- Enable RLS
-        ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
-        -- Public Access
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Public Access') THEN
-            CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'documents');
-        END IF;
-
-        -- Upload Policy
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Users can upload their own files') THEN
-            CREATE POLICY "Users can upload their own files" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
-        END IF;
-
-        -- Delete Policy
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'Users can delete their own files') THEN
-            CREATE POLICY "Users can delete their own files" ON storage.objects FOR DELETE USING (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
-        END IF;
-
-    END IF;
-END $$;
