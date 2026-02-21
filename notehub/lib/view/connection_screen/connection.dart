@@ -47,7 +47,7 @@ class _ConnectionState extends State<Connection> {
     );
   }
 
-  _renderConnectionList() {
+  Widget _renderConnectionList() {
     return GetX<ConnectionController>(builder: (controller) {
       if (controller.isLoading.value) {
         return Shimmer.fromColors(
@@ -75,7 +75,7 @@ class _ConnectionState extends State<Connection> {
     });
   }
 
-  _renderEmpty() {
+  Widget _renderEmpty() {
     return RefresherWidget(
       onRefresh: () async {
         connectionController.fetchConnection(type: widget.type);

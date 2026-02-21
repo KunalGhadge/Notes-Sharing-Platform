@@ -8,11 +8,11 @@ import "package:notehub/view/settings_screen/about.dart";
 class SettingsDrawerController extends GetxController {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
-  openDrawer() {
+  void openDrawer() {
     scaffoldKey.currentState!.openDrawer();
   }
 
-  closeDrawer() {
+  void closeDrawer() {
     scaffoldKey.currentState!.closeDrawer();
   }
 }
@@ -44,7 +44,8 @@ class SettingsDrawer extends StatelessWidget {
               leading: Icon(Icons.logout_rounded, color: DangerColors.shade500),
               title: Text(
                 "Log out",
-                style: AppTypography.subHead2.copyWith(color: DangerColors.shade500),
+                style: AppTypography.subHead2
+                    .copyWith(color: DangerColors.shade500),
               ),
             ),
           ],
@@ -53,7 +54,10 @@ class SettingsDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerItem({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildDrawerItem(
+      {required IconData icon,
+      required String title,
+      required VoidCallback onTap}) {
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.zero,

@@ -10,7 +10,7 @@ import 'package:notehub/view/widgets/refresher_widget.dart';
 class HomeDocumentSection extends StatelessWidget {
   const HomeDocumentSection({super.key});
 
-  _handleRefresh() async {
+  Future<void> _handleRefresh() async {
     var controller = Get.find<HomeController>();
 
     await controller.fetchUpdates();

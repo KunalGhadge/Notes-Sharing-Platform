@@ -22,9 +22,10 @@ class _SplashState extends State<Splash> {
     _redirect();
   }
 
-  _redirect() async {
+  Future<void> _redirect() async {
     await Future.delayed(const Duration(seconds: 3));
-    Get.offAll(() => HiveBoxes.userId.isNotEmpty ? const Layout() : const Login());
+    Get.offAll(
+        () => HiveBoxes.userId.isNotEmpty ? const Layout() : const Login());
   }
 
   @override

@@ -12,12 +12,12 @@ class HiveBoxes {
       ? userBox.get("data")!.id ?? ""
       : "";
 
-  static setUser(UserModel newUser) async {
+  static Future<void> setUser(UserModel newUser) async {
     await userBox.delete("data");
     await userBox.put("data", newUser);
   }
 
-  static resetUser() async {
+  static Future<void> resetUser() async {
     await userBox.delete("data");
   }
 }

@@ -72,7 +72,8 @@ class HomeHeader extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.notifications_none, color: Colors.white),
+                            child: const Icon(Icons.notifications_none,
+                                color: Colors.white),
                           ),
                         ),
                       ],
@@ -81,18 +82,21 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on, color: Colors.white, size: 18),
+                      const Icon(Icons.location_on,
+                          color: Colors.white, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         "Mumbai University Community",
-                        style: AppTypography.subHead3.copyWith(color: Colors.white),
+                        style: AppTypography.subHead3
+                            .copyWith(color: Colors.white),
                       ),
                     ],
                   ),
@@ -105,7 +109,7 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
-  _renderAvatar(ProfileController controller) {
+  Widget _renderAvatar(ProfileController controller) {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,

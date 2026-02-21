@@ -29,7 +29,7 @@ class DocumentCard extends StatelessWidget {
     this.imageOnTap,
   });
 
-  _showImage() {
+  void _showImage() {
     Get.dialog(
       Column(
         mainAxisAlignment: MainAxisAlignment.center,

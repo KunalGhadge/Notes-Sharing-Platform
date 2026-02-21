@@ -73,7 +73,7 @@ class _DocumentState extends State<Document> {
     );
   }
 
-  _renderHeader() {
+  Widget _renderHeader() {
     return Row(
       children: [
         CustomAvatar(path: widget.document.profile),
@@ -81,12 +81,16 @@ class _DocumentState extends State<Document> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.document.displayName, style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
-            Text(widget.document.username, style: AppTypography.body4.copyWith(color: Colors.grey)),
+            Text(widget.document.displayName,
+                style: AppTypography.subHead1
+                    .copyWith(fontWeight: FontWeight.bold)),
+            Text(widget.document.username,
+                style: AppTypography.body4.copyWith(color: Colors.grey)),
           ],
         ),
         const Spacer(),
-        if (HiveBoxes.userId != "" && HiveBoxes.username != widget.document.username)
+        if (HiveBoxes.userId != "" &&
+            HiveBoxes.username != widget.document.username)
           FollowButton(document: widget.document)
         else if (HiveBoxes.username == widget.document.username)
           Icon(Icons.edit_note_rounded, color: PrimaryColor.shade500, size: 28),
@@ -94,7 +98,7 @@ class _DocumentState extends State<Document> {
     );
   }
 
-  _renderDownloader() {
+  Widget _renderDownloader() {
     return Row(
       children: [
         Expanded(
@@ -105,7 +109,9 @@ class _DocumentState extends State<Document> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                widget.document.isExternal ? "Open External Link" : "View Document",
+                widget.document.isExternal
+                    ? "Open External Link"
+                    : "View Document",
                 style: AppTypography.subHead2.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -122,7 +128,8 @@ class _DocumentState extends State<Document> {
               FileDownload.download(
                 url: widget.document.document,
                 name: widget.document.documentName,
-                flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin,
+                flutterLocalNotificationsPlugin:
+                    flutterLocalNotificationsPlugin,
               );
             },
             child: Icon(Icons.download_rounded, color: PrimaryColor.shade500),

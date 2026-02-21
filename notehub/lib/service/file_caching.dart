@@ -22,14 +22,13 @@ Future<String> saveAndOpenFile(
   try {
     await dio.download(uri, savePath);
   } catch (error) {
-
     Toasts.showTostError(message: "Unable to open file");
   }
 
   return savePath;
 }
 
-Future<bool> ifFileExists(path) async {
+Future<bool> ifFileExists(String path) async {
   var file = File(path);
   if (await file.exists()) {
     return true;

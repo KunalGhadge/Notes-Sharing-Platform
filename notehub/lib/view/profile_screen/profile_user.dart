@@ -30,7 +30,8 @@ class _ProfileUserState extends State<ProfileUser> {
   }
 
   Future<void> loadUserData() async {
-    Get.find<ProfileUserController>(tag: widget.username).fetchUserData(username: widget.username);
+    Get.find<ProfileUserController>(tag: widget.username)
+        .fetchUserData(username: widget.username);
     Get.find<ShowcaseController>(tag: widget.username)
         .fetchProfilePosts(username: widget.username);
   }
@@ -149,7 +150,7 @@ class TopSection extends StatelessWidget {
     );
   }
 
-  _renderAvatar(String profile, String name) {
+  Widget _renderAvatar(String profile, String name) {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -207,7 +208,8 @@ class ButtonSection extends StatelessWidget {
                   color: PrimaryColor.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.share_outlined, color: PrimaryColor.shade500, size: 24),
+                child: Icon(Icons.share_outlined,
+                    color: PrimaryColor.shade500, size: 24),
               ),
             ],
           );

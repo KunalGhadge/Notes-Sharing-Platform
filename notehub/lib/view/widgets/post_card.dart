@@ -52,7 +52,7 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  _renderHeader() {
+  Widget _renderHeader() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -64,14 +64,18 @@ class PostCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                CustomAvatar(path: document.profile, name: document.displayName),
+                CustomAvatar(
+                    path: document.profile, name: document.displayName),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(document.displayName,
-                        style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
-                    Text(document.topic, style: AppTypography.body4.copyWith(color: PrimaryColor.shade500)),
+                        style: AppTypography.subHead1
+                            .copyWith(fontWeight: FontWeight.bold)),
+                    Text(document.topic,
+                        style: AppTypography.body4
+                            .copyWith(color: PrimaryColor.shade500)),
                   ],
                 ),
               ],
@@ -84,7 +88,7 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  _renderImage() {
+  Widget _renderImage() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ClipRRect(
@@ -100,7 +104,9 @@ class PostCard extends StatelessWidget {
               errorWidget: (context, url, error) => Container(
                 height: 250,
                 color: GrayscaleWhiteColors.almostWhite,
-                child: const Center(child: Icon(Icons.description, size: 50, color: Colors.grey)),
+                child: const Center(
+                    child:
+                        Icon(Icons.description, size: 50, color: Colors.grey)),
               ),
             ),
             Positioned(
@@ -123,12 +129,14 @@ class PostCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           document.name,
-                          style: AppTypography.subHead2.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: AppTypography.subHead2.copyWith(
+                              color: Colors.white, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (document.isExternal)
-                        const Icon(Icons.link_rounded, color: Colors.white, size: 20),
+                        const Icon(Icons.link_rounded,
+                            color: Colors.white, size: 20),
                     ],
                   ),
                 ),
@@ -140,21 +148,25 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  _renderFooter() {
+  Widget _renderFooter() {
     return GetBuilder<DocumentController>(
       builder: (controller) => Padding(
         padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
         child: Row(
           children: [
             _interactionItem(
-              icon: document.isLiked ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+              icon: document.isLiked
+                  ? Icons.thumb_up_rounded
+                  : Icons.thumb_up_outlined,
               count: document.likes,
               color: document.isLiked ? Colors.blue : Colors.grey,
               onTap: () => controller.toggleLike(document),
             ),
             const SizedBox(width: 16),
             _interactionItem(
-              icon: document.isDisliked ? Icons.thumb_down_rounded : Icons.thumb_down_outlined,
+              icon: document.isDisliked
+                  ? Icons.thumb_down_rounded
+                  : Icons.thumb_down_outlined,
               count: document.dislikes,
               color: document.isDisliked ? Colors.orange : Colors.grey,
               onTap: () => controller.toggleDislike(document),
@@ -164,7 +176,8 @@ class PostCard extends StatelessWidget {
               onTap: () => controller.toggleBookmark(document),
               child: Icon(
                 document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                color: document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
+                color:
+                    document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
                 size: 26,
               ),
             ),
@@ -179,14 +192,20 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _interactionItem({required IconData icon, required int count, required Color color, required VoidCallback onTap}) {
+  Widget _interactionItem(
+      {required IconData icon,
+      required int count,
+      required Color color,
+      required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Row(
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(width: 4),
-          Text(count.toString(), style: AppTypography.body3.copyWith(color: color, fontWeight: FontWeight.bold)),
+          Text(count.toString(),
+              style: AppTypography.body3
+                  .copyWith(color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );

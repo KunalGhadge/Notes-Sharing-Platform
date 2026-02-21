@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
     loadData();
   }
 
-  loadData() async {
+  Future<void> loadData() async {
     var homeController = Get.find<HomeController>();
     if (!homeController.isFetched.value) {
       homeController.fetchUpdates();

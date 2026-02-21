@@ -12,7 +12,7 @@ class MoreOptions extends StatelessWidget {
     );
   }
 
-  _renderTile(VoidCallback onTap, String placeholder) {
-    return;
+  Widget _renderTile(VoidCallback onTap, String placeholder) {
+    return const SizedBox.shrink();
   }
 }

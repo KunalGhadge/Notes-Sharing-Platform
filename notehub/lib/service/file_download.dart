@@ -94,7 +94,7 @@ class FileDownload {
     }
   }
 
-  static Future<bool> ifFileExists(path) async {
+  static Future<bool> ifFileExists(String path) async {
     var file = File(path);
     if (await file.exists()) {
       return true;

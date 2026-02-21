@@ -5,7 +5,7 @@ import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
 
 class Toasts {
-  static void showTostSuccess({message}) {
+  static void showTostSuccess({required String message}) {
     toastification.show(
       type: ToastificationType.success,
       style: ToastificationStyle.flatColored,
@@ -36,7 +36,7 @@ class Toasts {
     );
   }
 
-  static void showTostError({message}) {
+  static void showTostError({required String message}) {
     toastification.show(
       type: ToastificationType.error,
       style: ToastificationStyle.flatColored,

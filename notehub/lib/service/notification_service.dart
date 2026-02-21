@@ -1,3 +1,3 @@
 class NotificationService {
-  requestPermission() {}
+  void requestPermission() {}
 }

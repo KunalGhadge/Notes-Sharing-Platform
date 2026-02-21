@@ -1,35 +1,39 @@
-name: Build Flutter APK
-
-on:
-  push:
-    branches:
-      - main
+name: Flutter Build APK
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: notehub
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - name: Install Android SDK 36
+        # This mirrors the manual fix we did on your PC
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.1' 
+          channel: 'master'
 
+      - name: Get Dependencies
+        working-directory: notehub
+        run: flutter pub get
 
-      - run: flutter pub get
-      - run: flutter build apk --release
+      - name: Build APK
+        working-directory: notehub
+        run: flutter build apk --release
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: notehub/build/app/outputs/flutter-apk/app-release.apk
