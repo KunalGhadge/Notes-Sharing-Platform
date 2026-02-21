@@ -112,7 +112,9 @@ class DocumentController extends GetxController {
       doc.isLiked = !doc.isLiked;
       update();
     } catch (e) {
-      Toasts.showTostError(message: "Failed to update like");
+      String msg = "Failed to update like";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
     }
   }
 
@@ -134,7 +136,9 @@ class DocumentController extends GetxController {
       doc.isDisliked = !doc.isDisliked;
       update();
     } catch (e) {
-      Toasts.showTostError(message: "Failed to update dislike");
+      String msg = "Failed to update dislike";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
     }
   }
 
@@ -159,7 +163,9 @@ class DocumentController extends GetxController {
       doc.isBookmarked = !doc.isBookmarked;
       update();
     } catch (e) {
-      Toasts.showTostError(message: "Failed to update bookmark");
+      String msg = "Failed to update bookmark";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
     }
   }
 

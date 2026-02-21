@@ -65,7 +65,9 @@ class CommentController extends GetxController {
       fetchComments(docId);
       _createNotification(docId, 'comment', content);
     } catch (e) {
-      Toasts.showTostError(message: "Failed to post comment");
+      String msg = "Failed to post comment";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
     }
   }
 

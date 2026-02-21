@@ -103,7 +103,9 @@ class ProfileUserController extends GetxController {
       }
       return true;
     } catch (e) {
-      Toasts.showTostError(message: "Unable to take action");
+      String msg = "Unable to take action";
+      if (e is PostgrestException) msg = e.message;
+      Toasts.showTostError(message: msg);
 
       return false;
     } finally {

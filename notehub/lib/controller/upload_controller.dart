@@ -140,8 +140,10 @@ class UploadController extends GetxController {
       clearForm();
       Get.back();
     } catch (e) {
-
-      Toasts.showTostError(message: "We encountered an issue while saving your notes. Please try again in a moment.");
+      String msg = "We encountered an issue while saving your notes. Please try again in a moment.";
+      if (e is PostgrestException) msg = e.message;
+      if (e is StorageException) msg = "Storage Error: ${e.message}";
+      Toasts.showTostError(message: msg);
     } finally {
       isLoading.value = false;
     }

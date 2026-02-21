@@ -6,17 +6,26 @@ import 'package:notehub/core/config/typography.dart';
 import 'package:notehub/core/meta/app_meta.dart';
 import 'package:intl/intl.dart';
 
-class CommentSection extends StatelessWidget {
+class CommentSection extends StatefulWidget {
   final String docId;
-  CommentSection({super.key, required this.docId});
+  const CommentSection({super.key, required this.docId});
 
+  @override
+  State<CommentSection> createState() => _CommentSectionState();
+}
+
+class _CommentSectionState extends State<CommentSection> {
   final controller = Get.put(CommentController());
   final textController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    controller.fetchComments(docId);
+  void initState() {
+    super.initState();
+    controller.fetchComments(widget.docId);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,7 +48,7 @@ class CommentSection extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton(
               onPressed: () {
-                controller.postComment(docId, textController.text);
+                controller.postComment(widget.docId, textController.text);
                 textController.clear();
                 FocusScope.of(context).unfocus();
               },
