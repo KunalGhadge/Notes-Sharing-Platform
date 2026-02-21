@@ -73,5 +73,15 @@ Make sure your Flutter app is pointing to your Supabase project.
 *   **Likes/Dislikes:** Uses custom SQL functions (RPC).
 *   **Follows/Comments/Notifications:** Handled via dedicated tables.
 
+## 6. Realtime & Push Notifications
+The app uses Supabase Realtime to show local push notifications on your device.
+
+1.  Go to **Database** > **Replication**.
+2.  Enable replication for the `notifications` table (Toggle the switch next to it).
+3.  Ensure your Android device has internet access and you have granted notification permissions to the app.
+
 ---
-**Need Help?** If you see any "Registration failed" or "Error" messages, double-check that you ran the SQL script in Step 2 and followed the Storage Policy steps in Step 3.
+**Need Help?**
+*   **"Grey Space" or Blank Screens:** This usually means the database is empty or the schema wasn't fully applied. Run Step 2 again.
+*   **"Registration failed":** Check if you have enabled Email Auth in your Supabase project.
+*   **"Error saving notes":** Make sure the `documents` bucket exists and has the correct policies from Step 3.

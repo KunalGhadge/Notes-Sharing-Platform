@@ -33,9 +33,15 @@ class HomeDocumentSection extends StatelessWidget {
               color: GrayscaleWhiteColors.white,
               width: Get.width,
               height: Get.height,
-              child: const Expanded(
-                child: Center(
-                  child: Text("Follow Some People"),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_outline, size: 60, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    const Text("No updates from your community yet"),
+                    const Text("Follow some people to see their notes!", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
                 ),
               ),
             );

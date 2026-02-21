@@ -25,6 +25,7 @@ class DocumentController extends GetxController {
         await fetchDocsByUserId(userId);
       }
     } catch (e) { /* silent */ }
+    update();
   }
 
   Future<void> fetchDocsByUserId(String userId) async {
@@ -139,13 +140,21 @@ class DocumentController extends GetxController {
 
   Future<void> toggleBookmark(DocumentModel doc) async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      Toasts.showTostError(message: "Please log in to bookmark resources");
+      return;
+    }
 
     try {
       if (doc.isBookmarked) {
-        await supabase.from('bookmarks').delete().match({'user_id': userId, 'document_id': doc.documentId});
+        await supabase
+            .from('bookmarks')
+            .delete()
+            .match({'user_id': userId, 'document_id': doc.documentId});
       } else {
-        await supabase.from('bookmarks').insert({'user_id': userId, 'document_id': doc.documentId});
+        await supabase
+            .from('bookmarks')
+            .insert({'user_id': userId, 'document_id': doc.documentId});
       }
       doc.isBookmarked = !doc.isBookmarked;
       update();

@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
@@ -26,6 +27,60 @@ class NotificationController extends GetxController {
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
   var notifications = <NotificationModel>[].obs;
+  RealtimeChannel? _channel;
+
+  @override
+  void onInit() {
+    super.onInit();
+    listenToNotifications();
+  }
+
+  @override
+  void onClose() {
+    _channel?.unsubscribe();
+    super.onClose();
+  }
+
+  void listenToNotifications() {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty) return;
+
+    _channel = supabase
+        .channel('public:notifications')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            _showLocalNotification(payload.newRecord);
+            fetchNotifications();
+          },
+        )
+        .subscribe();
+  }
+
+  Future<void> _showLocalNotification(Map<String, dynamic> record) async {
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const android = AndroidNotificationDetails(
+      'notes_channel',
+      'Notes Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const platform = NotificationDetails(android: android);
+
+    await flutterLocalNotificationsPlugin.show(
+      id: record['id'].hashCode,
+      title: 'New ${record['type']}',
+      body: record['content'] ?? 'You have a new interaction on your notes!',
+      notificationDetails: platform,
+    );
+  }
 
   Future<void> fetchNotifications() async {
     isLoading.value = true;

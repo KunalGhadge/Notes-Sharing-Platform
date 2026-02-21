@@ -60,7 +60,7 @@ class ProfileUserController extends GetxController {
       profileData.value = UserModel(
         id: userId,
         displayName: profileResponse['display_name'] ?? "User",
-        username: profileResponse['username'],
+        username: profileResponse['username'] ?? username,
         profile: profileResponse['profile_url'] ?? "NA",
         institute: profileResponse['institute'] ?? "Mumbai University",
         followers: followersRes.count,
@@ -77,6 +77,10 @@ class ProfileUserController extends GetxController {
     isLoading.value = true;
     try {
       final currentUserId = HiveBoxes.userId;
+      if (currentUserId.isEmpty) {
+        Toasts.showTostError(message: "Please log in to follow students");
+        return false;
+      }
       final targetUserId = profileData.value.id;
 
       if (targetUserId == null) return false;

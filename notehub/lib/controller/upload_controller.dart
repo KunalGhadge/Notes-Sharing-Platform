@@ -66,6 +66,10 @@ class UploadController extends GetxController {
     isLoading.value = true;
     try {
       final userId = HiveBoxes.userId;
+      if (userId.isEmpty) {
+        Toasts.showTostError(message: "Session expired. Please log in again.");
+        return;
+      }
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final sanitizedName =
           nameEditingController.text.replaceAll(RegExp(r'[^\w\s\-]'), '_');

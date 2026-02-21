@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/controller/bottom_navigation_controller.dart';
+import 'package:notehub/controller/notification_controller.dart';
 import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/splash_screen/splash.dart';
@@ -17,11 +19,17 @@ void main() async {
     anonKey: AppMetaData.supabaseAnonKey,
   );
 
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const initSettings = InitializationSettings(android: android);
+  await flutterLocalNotificationsPlugin.initialize(settings: initSettings);
+
   await Hive.initFlutter();
   Hive.registerAdapter(UserModelAdapter());
   await Hive.openBox<UserModel>("user");
   Get.put(BottomNavigationController());
   Get.put(ShowcaseController());
+  Get.put(NotificationController());
   runApp(const MyApp());
 }
 

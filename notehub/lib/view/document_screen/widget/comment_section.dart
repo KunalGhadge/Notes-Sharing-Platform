@@ -79,7 +79,13 @@ class CommentSection extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(comment.displayName, style: AppTypography.body3.copyWith(fontWeight: FontWeight.bold)),
+                              GestureDetector(
+                                onTap: () {
+                                  textController.text = "@${comment.displayName} ";
+                                  FocusScope.of(context).requestFocus(FocusNode());
+                                },
+                                child: Text(comment.displayName, style: AppTypography.body3.copyWith(fontWeight: FontWeight.bold, color: PrimaryColor.shade500)),
+                              ),
                               Text(DateFormat.yMMMd().format(comment.createdAt), style: AppTypography.body4.copyWith(color: Colors.grey)),
                             ],
                           ),
