@@ -49,14 +49,27 @@ class AuthController extends GetxController {
 
       if (response.user != null) {
         await fetchAndStoreProfile(response.user!);
+ fix-auth-registration-issue-15629369363913246465
         // Restart notification listener for new user
         Get.find<NotificationController>().listenToNotifications();
+
+        if (HiveBoxes.userId.isEmpty) {
+          Toasts.showTostError(
+              message:
+                  "Failed to sync local session. Please try logging in again.");
+          return;
+        }
+    main
         Get.offAll(() => const Layout());
       }
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
+ fix-auth-registration-issue-15629369363913246465
       Toasts.showTostError(message: "Login failed: ${error.toString()}");
+
+      Toasts.showTostError(message: "An unexpected error occurred: $error");
+ main
     } finally {
       isLoading.value = false;
     }
@@ -87,8 +100,17 @@ class AuthController extends GetxController {
           });
 
           await fetchAndStoreProfile(response.user!);
+ fix-auth-registration-issue-15629369363913246465
           // Restart notification listener for new user
           Get.find<NotificationController>().listenToNotifications();
+
+          if (HiveBoxes.userId.isEmpty) {
+            Toasts.showTostError(
+                message:
+                    "Registration successful, but session sync failed. Please log in.");
+            return;
+          }
+ main
           Toasts.showTostSuccess(message: "Registration successful!");
           Get.offAll(() => const Layout());
         } else {
@@ -103,7 +125,11 @@ class AuthController extends GetxController {
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
+ fix-auth-registration-issue-15629369363913246465
       Toasts.showTostError(message: "Registration failed: ${error.toString()}");
+
+      Toasts.showTostError(message: "Registration failed: $error");
+ main
     } finally {
       isLoading.value = false;
     }

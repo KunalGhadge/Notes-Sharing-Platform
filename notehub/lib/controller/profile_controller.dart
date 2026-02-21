@@ -60,16 +60,21 @@ class ProfileController extends GetxController {
       if (username == HiveBoxes.username) {
         await HiveBoxes.setUser(user.value);
       }
+ fix-auth-registration-issue-15629369363913246465
     } catch (e) {
       if (username == HiveBoxes.username) {
         // Try to recover profile if it's missing but user is logged in
         await ensureProfileExists();
       }
     } finally {
+
+    } catch (e) {/* silent */} finally {
+ main
       isLoading.value = false;
     }
   }
 
+ fix-auth-registration-issue-15629369363913246465
   Future<void> ensureProfileExists() async {
     final userId = HiveBoxes.userId;
     if (userId.isEmpty) return;
@@ -99,21 +104,37 @@ class ProfileController extends GetxController {
   }
 
   Future<void> updateProfile({String? name, String? institute, List<String>? interests}) async {
+
+  Future<void> updateProfile(
+      {String? name, String? institute, List<String>? interests}) async {
+ main
     isLoading.value = true;
     try {
-      final userId = HiveBoxes.userId;
-      if (userId.isEmpty) {
-        Toasts.showTostError(message: "Session expired. Please log in again.");
+      final session = supabase.auth.currentSession;
+      if (session == null || session.isExpired) {
+        Toasts.showTostError(message: "Session expired. Please sign in again.");
         return;
       }
+
+      final userId = HiveBoxes.userId.isNotEmpty
+          ? HiveBoxes.userId
+          : supabase.auth.currentUser?.id;
+      if (userId == null || userId.isEmpty) {
+        Toasts.showTostError(
+            message: "User context not found. Please log in again.");
+        return;
+      }
+
       await supabase.from('profiles').update({
         if (name != null) 'display_name': name,
         if (institute != null) 'institute': institute,
         if (interests != null) 'academic_interests': interests,
       }).eq('id', userId);
 
-      fetchUserData(username: HiveBoxes.username);
+      await fetchUserData(username: HiveBoxes.username);
       Toasts.showTostSuccess(message: "Profile updated successfully");
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Failed to update profile: ${e.message}");
     } catch (e) {
       String msg = "Failed to update profile";
       if (e is PostgrestException) {

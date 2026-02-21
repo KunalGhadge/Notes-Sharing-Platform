@@ -24,26 +24,22 @@ class DocumentController extends GetxController {
         final userId = userResponse['id'];
         await fetchDocsByUserId(userId);
       }
-    } catch (e) { /* silent */ }
+    } catch (e) {/* silent */}
     update();
   }
 
   Future<void> fetchDocsByUserId(String userId) async {
     isLoading.value = true;
     try {
-      final response = await supabase
-          .from('documents')
-          .select('''
+      final response = await supabase.from('documents').select('''
             *,
             profiles:user_id (id, username, display_name, profile_url),
             interactions:interactions(user_id, type),
             bookmarks:bookmarks(user_id)
-          ''')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+          ''').eq('user_id', userId).order('created_at', ascending: false);
 
       userDocs.value = _mapDocuments(response as List);
-    } catch (e) { /* silent */ } finally {
+    } catch (e) {/* silent */} finally {
       isLoading.value = false;
     }
   }
@@ -59,13 +55,12 @@ class DocumentController extends GetxController {
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 
-      final interaction = interactions.firstWhere(
-        (i) => i['user_id'] == currentUserId,
-        orElse: () => null
-      );
+      final interaction = interactions
+          .firstWhere((i) => i['user_id'] == currentUserId, orElse: () => null);
 
       final isLiked = interaction != null && interaction['type'] == 'like';
-      final isDisliked = interaction != null && interaction['type'] == 'dislike';
+      final isDisliked =
+          interaction != null && interaction['type'] == 'dislike';
       final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
 
       tmp.add(DocumentModel(
@@ -99,22 +94,34 @@ class DocumentController extends GetxController {
 
     try {
       if (doc.isLiked) {
-        await supabase.from('interactions').delete().match({'user_id': userId, 'document_id': doc.documentId});
-        await supabase.rpc('decrement_likes', params: {'doc_id': doc.documentId});
+        await supabase
+            .from('interactions')
+            .delete()
+            .match({'user_id': userId, 'document_id': doc.documentId});
+        await supabase
+            .rpc('decrement_likes', params: {'doc_id': doc.documentId});
         doc.likes -= 1;
       } else {
         if (doc.isDisliked) await toggleDislike(doc);
-        await supabase.from('interactions').upsert({'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
-        await supabase.rpc('increment_likes', params: {'doc_id': doc.documentId});
+        await supabase.from('interactions').upsert(
+            {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
+        await supabase
+            .rpc('increment_likes', params: {'doc_id': doc.documentId});
         doc.likes += 1;
         _createNotification(doc.documentId, 'like');
       }
       doc.isLiked = !doc.isLiked;
       update();
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Could not update like: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
       String msg = "Failed to update like";
       if (e is PostgrestException) msg = e.message;
       Toasts.showTostError(message: msg);
+
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 
@@ -124,21 +131,36 @@ class DocumentController extends GetxController {
 
     try {
       if (doc.isDisliked) {
-        await supabase.from('interactions').delete().match({'user_id': userId, 'document_id': doc.documentId});
-        await supabase.rpc('decrement_dislikes', params: {'doc_id': doc.documentId});
+        await supabase
+            .from('interactions')
+            .delete()
+            .match({'user_id': userId, 'document_id': doc.documentId});
+        await supabase
+            .rpc('decrement_dislikes', params: {'doc_id': doc.documentId});
         doc.dislikes -= 1;
       } else {
         if (doc.isLiked) await toggleLike(doc);
-        await supabase.from('interactions').upsert({'user_id': userId, 'document_id': doc.documentId, 'type': 'dislike'});
-        await supabase.rpc('increment_dislikes', params: {'doc_id': doc.documentId});
+        await supabase.from('interactions').upsert({
+          'user_id': userId,
+          'document_id': doc.documentId,
+          'type': 'dislike'
+        });
+        await supabase
+            .rpc('increment_dislikes', params: {'doc_id': doc.documentId});
         doc.dislikes += 1;
       }
       doc.isDisliked = !doc.isDisliked;
       update();
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Could not update dislike: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
       String msg = "Failed to update dislike";
       if (e is PostgrestException) msg = e.message;
       Toasts.showTostError(message: msg);
+
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 
@@ -162,10 +184,16 @@ class DocumentController extends GetxController {
       }
       doc.isBookmarked = !doc.isBookmarked;
       update();
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Action failed: ${e.message}");
     } catch (e) {
+ fix-auth-registration-issue-15629369363913246465
       String msg = "Failed to update bookmark";
       if (e is PostgrestException) msg = e.message;
       Toasts.showTostError(message: msg);
+
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
+ main
     }
   }
 
@@ -188,7 +216,7 @@ class DocumentController extends GetxController {
         'document_id': docId,
         'type': type,
       });
-    } catch (e) { /* silent */ }
+    } catch (e) {/* silent */}
   }
 
   void openDocument(DocumentModel doc) async {
@@ -197,10 +225,13 @@ class DocumentController extends GetxController {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        Toasts.showTostError(message: "Our systems encountered an issue opening this link. Please verify it's a valid URL.");
+        Toasts.showTostError(
+            message:
+                "Our systems encountered an issue opening this link. Please verify it's a valid URL.");
       }
     } else {
-      String path = await saveAndOpenFile(uri: doc.document, name: doc.documentName);
+      String path =
+          await saveAndOpenFile(uri: doc.document, name: doc.documentName);
       OpenFile.open(path);
     }
   }
