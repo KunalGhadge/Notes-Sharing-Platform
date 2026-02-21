@@ -18,10 +18,12 @@ class DocumentController extends GetxController {
           .from('profiles')
           .select('id')
           .eq('username', username)
-          .single();
+          .maybeSingle();
 
-      final userId = userResponse['id'];
-      await fetchDocsByUserId(userId);
+      if (userResponse != null) {
+        final userId = userResponse['id'];
+        await fetchDocsByUserId(userId);
+      }
     } catch (e) { /* silent */ }
   }
 
@@ -39,18 +41,20 @@ class DocumentController extends GetxController {
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
-      userDocs.value = _mapDocuments(response);
+      userDocs.value = _mapDocuments(response as List);
     } catch (e) { /* silent */ } finally {
       isLoading.value = false;
     }
   }
 
-  List<DocumentModel> _mapDocuments(dynamic response) {
+  List<DocumentModel> _mapDocuments(List response) {
     final List<DocumentModel> tmp = [];
     final currentUserId = HiveBoxes.userId;
 
     for (var doc in response) {
       final profile = doc['profiles'];
+      if (profile == null) continue; // Skip docs with no profile data
+
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 
@@ -65,7 +69,7 @@ class DocumentController extends GetxController {
 
       tmp.add(DocumentModel(
         documentId: doc['id'].toString(),
-        username: profile['username'],
+        username: profile['username'] ?? "unknown",
         displayName: profile['display_name'] ?? "User",
         profile: profile['profile_url'] ?? "NA",
         isFollowedByUser: false,
@@ -152,7 +156,13 @@ class DocumentController extends GetxController {
 
   Future<void> _createNotification(String docId, String type) async {
     try {
-      final docData = await supabase.from('documents').select('user_id').eq('id', docId).single();
+      final docData = await supabase
+          .from('documents')
+          .select('user_id')
+          .eq('id', docId)
+          .maybeSingle();
+      if (docData == null) return;
+
       final receiverId = docData['user_id'];
       final senderId = HiveBoxes.userId;
       if (receiverId == senderId) return;

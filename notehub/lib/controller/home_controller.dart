@@ -26,37 +26,40 @@ class HomeController extends GetxController {
           .order('created_at', ascending: false)
           .limit(50);
 
-      updates.value = _mapDocuments(response);
+      updates.value = _mapDocuments(response as List);
       update();
     } catch (e) {
-
-      Toasts.showTostError(message: "We're currently unable to refresh the feed. Please check your connection.");
+      Toasts.showTostError(
+          message:
+              "We're currently unable to refresh the feed. Please check your connection.");
     } finally {
       isLoading.value = false;
     }
   }
 
-  List<DocumentModel> _mapDocuments(dynamic response) {
+  List<DocumentModel> _mapDocuments(List response) {
     final List<DocumentModel> tmp = [];
     final currentUserId = HiveBoxes.userId;
 
     for (var doc in response) {
       final profile = doc['profiles'];
+      if (profile == null) continue; // Skip docs with no profile data
+
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 
       final interaction = interactions.firstWhere(
-        (i) => i['user_id'] == currentUserId,
-        orElse: () => null
-      );
+          (i) => i['user_id'] == currentUserId,
+          orElse: () => null);
 
       final isLiked = interaction != null && interaction['type'] == 'like';
-      final isDisliked = interaction != null && interaction['type'] == 'dislike';
+      final isDisliked =
+          interaction != null && interaction['type'] == 'dislike';
       final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
 
       tmp.add(DocumentModel(
         documentId: doc['id'].toString(),
-        username: profile['username'],
+        username: profile['username'] ?? "unknown",
         displayName: profile['display_name'] ?? "User",
         profile: profile['profile_url'] ?? "NA",
         isFollowedByUser: false,

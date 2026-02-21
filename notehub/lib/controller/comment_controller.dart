@@ -33,7 +33,7 @@ class CommentController extends GetxController {
           .eq('document_id', docId)
           .order('created_at', ascending: false);
 
-      comments.value = (response as List).map((c) {
+      comments.value = (response as List).where((c) => c['profiles'] != null).map((c) {
         final profile = c['profiles'];
         return CommentModel(
           id: c['id'].toString(),
@@ -67,7 +67,13 @@ class CommentController extends GetxController {
 
   Future<void> _createNotification(String docId, String type, String content) async {
     try {
-      final docData = await supabase.from('documents').select('user_id').eq('id', docId).single();
+      final docData = await supabase
+          .from('documents')
+          .select('user_id')
+          .eq('id', docId)
+          .maybeSingle();
+      if (docData == null) return;
+
       final receiverId = docData['user_id'];
       final senderId = HiveBoxes.userId;
       if (receiverId == senderId) return;

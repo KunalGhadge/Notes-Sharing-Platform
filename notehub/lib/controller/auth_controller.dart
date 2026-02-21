@@ -101,7 +101,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> fetchAndStoreProfile(User user) async {
+  Future<void> fetchAndStoreProfile(User user, {int retryCount = 0}) async {
     try {
       final profileData = await supabase
           .from('profiles')
@@ -110,6 +110,8 @@ class AuthController extends GetxController {
           .maybeSingle();
 
       if (profileData == null) {
+        if (retryCount > 1) throw Exception("Profile creation failed");
+
         // Create profile from metadata if it doesn't exist
         final metadata = user.userMetadata ?? {};
         await supabase.from('profiles').upsert({
@@ -118,8 +120,8 @@ class AuthController extends GetxController {
           'display_name': metadata['display_name'] ?? "User",
           'institute': metadata['institute'] ?? "Mumbai University",
         });
-        // Recursive call to fetch the newly created profile
-        return await fetchAndStoreProfile(user);
+        // Retry fetching the newly created profile
+        return await fetchAndStoreProfile(user, retryCount: retryCount + 1);
       }
 
       final counts = await getCounts(user.id);

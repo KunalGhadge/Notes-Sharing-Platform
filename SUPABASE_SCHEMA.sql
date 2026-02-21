@@ -101,6 +101,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can remove interaction.') THEN
         CREATE POLICY "Users can remove interaction." ON public.interactions FOR DELETE USING (auth.uid() = user_id);
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update interaction.') THEN
+        CREATE POLICY "Users can update interaction." ON public.interactions FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
 END $$;
 
 -- 5. Notifications Table
@@ -134,6 +137,19 @@ CREATE TABLE IF NOT EXISTS public.bookmarks (
 
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view their own bookmarks.') THEN
+        CREATE POLICY "Users can view their own bookmarks." ON public.bookmarks FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can create bookmarks.') THEN
+        CREATE POLICY "Users can create bookmarks." ON public.bookmarks FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete bookmarks.') THEN
+        CREATE POLICY "Users can delete bookmarks." ON public.bookmarks FOR DELETE USING (auth.uid() = user_id);
+    END IF;
+END $$;
+
 -- 7. Follows
 CREATE TABLE IF NOT EXISTS public.follows (
   follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -142,6 +158,19 @@ CREATE TABLE IF NOT EXISTS public.follows (
 );
 
 ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Follows are viewable by everyone.') THEN
+        CREATE POLICY "Follows are viewable by everyone." ON public.follows FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can follow others.') THEN
+        CREATE POLICY "Users can follow others." ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can unfollow others.') THEN
+        CREATE POLICY "Users can unfollow others." ON public.follows FOR DELETE USING (auth.uid() = follower_id);
+    END IF;
+END $$;
 
 -- Functions for Atomic Increments
 CREATE OR REPLACE FUNCTION increment_likes(doc_id UUID)
@@ -171,3 +200,20 @@ BEGIN
   UPDATE public.documents SET dislikes_count = dislikes_count - 1 WHERE id = doc_id;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 8. Storage Policies (Run after creating 'documents' bucket)
+-- Enable RLS on storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'documents');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can upload their own files') THEN
+        CREATE POLICY "Users can upload their own files" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete their own files') THEN
+        CREATE POLICY "Users can delete their own files" ON storage.objects FOR DELETE USING (bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+    END IF;
+END $$;
