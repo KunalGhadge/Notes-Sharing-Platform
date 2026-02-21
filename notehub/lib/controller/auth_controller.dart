@@ -48,12 +48,18 @@ class AuthController extends GetxController {
 
       if (response.user != null) {
         await fetchAndStoreProfile(response.user!);
+        if (HiveBoxes.userId.isEmpty) {
+          Toasts.showTostError(
+              message:
+                  "Failed to sync local session. Please try logging in again.");
+          return;
+        }
         Get.offAll(() => const Layout());
       }
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
-      Toasts.showTostError(message: "An unexpected error occurred");
+      Toasts.showTostError(message: "An unexpected error occurred: $error");
     } finally {
       isLoading.value = false;
     }
@@ -84,6 +90,12 @@ class AuthController extends GetxController {
           });
 
           await fetchAndStoreProfile(response.user!);
+          if (HiveBoxes.userId.isEmpty) {
+            Toasts.showTostError(
+                message:
+                    "Registration successful, but session sync failed. Please log in.");
+            return;
+          }
           Toasts.showTostSuccess(message: "Registration successful!");
           Get.offAll(() => const Layout());
         } else {
@@ -95,7 +107,7 @@ class AuthController extends GetxController {
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
     } catch (error) {
-      Toasts.showTostError(message: "Registration failed");
+      Toasts.showTostError(message: "Registration failed: $error");
     } finally {
       isLoading.value = false;
     }

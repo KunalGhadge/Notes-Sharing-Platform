@@ -60,29 +60,42 @@ class ProfileController extends GetxController {
       if (username == HiveBoxes.username) {
         await HiveBoxes.setUser(user.value);
       }
-    } catch (e) { /* silent */ } finally {
+    } catch (e) {/* silent */} finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> updateProfile({String? name, String? institute, List<String>? interests}) async {
+  Future<void> updateProfile(
+      {String? name, String? institute, List<String>? interests}) async {
     isLoading.value = true;
     try {
-      final userId = HiveBoxes.userId;
-      if (userId.isEmpty) {
-        Toasts.showTostError(message: "Session expired. Please log in again.");
+      final session = supabase.auth.currentSession;
+      if (session == null || session.isExpired) {
+        Toasts.showTostError(message: "Session expired. Please sign in again.");
         return;
       }
+
+      final userId = HiveBoxes.userId.isNotEmpty
+          ? HiveBoxes.userId
+          : supabase.auth.currentUser?.id;
+      if (userId == null || userId.isEmpty) {
+        Toasts.showTostError(
+            message: "User context not found. Please log in again.");
+        return;
+      }
+
       await supabase.from('profiles').update({
         if (name != null) 'display_name': name,
         if (institute != null) 'institute': institute,
         if (interests != null) 'academic_interests': interests,
       }).eq('id', userId);
 
-      fetchUserData(username: HiveBoxes.username);
+      await fetchUserData(username: HiveBoxes.username);
       Toasts.showTostSuccess(message: "Profile updated successfully");
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Failed to update profile: ${e.message}");
     } catch (e) {
-      Toasts.showTostError(message: "Failed to update profile");
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
     } finally {
       isLoading.value = false;
     }

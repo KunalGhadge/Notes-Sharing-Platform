@@ -33,7 +33,8 @@ class CommentController extends GetxController {
           .eq('document_id', docId)
           .order('created_at', ascending: false);
 
-      comments.value = (response as List).where((c) => c['profiles'] != null).map((c) {
+      comments.value =
+          (response as List).where((c) => c['profiles'] != null).map((c) {
         final profile = c['profiles'];
         return CommentModel(
           id: c['id'].toString(),
@@ -43,7 +44,7 @@ class CommentController extends GetxController {
           createdAt: DateTime.parse(c['created_at']),
         );
       }).toList();
-    } catch (e) { /* silent */ } finally {
+    } catch (e) {/* silent */} finally {
       isLoading.value = false;
     }
   }
@@ -64,12 +65,15 @@ class CommentController extends GetxController {
       });
       fetchComments(docId);
       _createNotification(docId, 'comment', content);
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Could not post comment: ${e.message}");
     } catch (e) {
-      Toasts.showTostError(message: "Failed to post comment");
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
     }
   }
 
-  Future<void> _createNotification(String docId, String type, String content) async {
+  Future<void> _createNotification(
+      String docId, String type, String content) async {
     try {
       final docData = await supabase
           .from('documents')
@@ -89,6 +93,6 @@ class CommentController extends GetxController {
         'type': type,
         'content': content,
       });
-    } catch (e) { /* silent */ }
+    } catch (e) {/* silent */}
   }
 }

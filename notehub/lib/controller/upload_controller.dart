@@ -36,14 +36,18 @@ class UploadController extends GetxController {
   }
 
   Future<void> uploadDocument() async {
-    if (nameEditingController.text.isEmpty || topicEditingController.text.isEmpty) {
-      Toasts.showTostWarning(message: "All major fields are required for quality community notes.");
+    if (nameEditingController.text.isEmpty ||
+        topicEditingController.text.isEmpty) {
+      Toasts.showTostWarning(
+          message:
+              "All major fields are required for quality community notes.");
       return;
     }
 
     if (isExternalLink.value) {
       if (linkEditingController.text.isEmpty) {
-        Toasts.showTostWarning(message: "Please provide a valid external resource link.");
+        Toasts.showTostWarning(
+            message: "Please provide a valid external resource link.");
         return;
       }
     } else {
@@ -53,23 +57,38 @@ class UploadController extends GetxController {
       }
       // 10MB Limit Check
       if (selectedDocument.value!.size > 10 * 1024 * 1024) {
-        Toasts.showTostWarning(message: "This file exceeds our 10MB direct upload limit. To help us stay free, please use a Google Drive or Mega link instead.");
+        Toasts.showTostWarning(
+            message:
+                "This file exceeds our 10MB direct upload limit. To help us stay free, please use a Google Drive or Mega link instead.");
         return;
       }
     }
 
     if (selectedCover.value == null) {
-      Toasts.showTostWarning(message: "A cover image helps others find your notes easily.");
+      Toasts.showTostWarning(
+          message: "A cover image helps others find your notes easily.");
       return;
     }
 
     isLoading.value = true;
     try {
-      final userId = HiveBoxes.userId;
-      if (userId.isEmpty) {
-        Toasts.showTostError(message: "Session expired. Please log in again.");
+      final session = supabase.auth.currentSession;
+      if (session == null || session.isExpired) {
+        Toasts.showTostError(
+            message:
+                "Your session has expired. Please sign in again to upload notes.");
         return;
       }
+
+      final userId = HiveBoxes.userId.isNotEmpty
+          ? HiveBoxes.userId
+          : supabase.auth.currentUser?.id;
+      if (userId == null || userId.isEmpty) {
+        Toasts.showTostError(
+            message: "User context not found. Please try logging in again.");
+        return;
+      }
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final sanitizedName =
           nameEditingController.text.replaceAll(RegExp(r'[^\w\s\-]'), '_');
@@ -82,20 +101,27 @@ class UploadController extends GetxController {
 
       try {
         await supabase.storage.from('documents').upload(
-          coverPath,
-          compressedCover ?? coverFile,
-          fileOptions: const FileOptions(contentType: 'image/jpeg'),
-        );
+              coverPath,
+              compressedCover ?? coverFile,
+              fileOptions: const FileOptions(contentType: 'image/jpeg'),
+            );
       } on StorageException catch (e) {
         if (e.statusCode == '413') {
-          Toasts.showTostError(message: "Storage limit reached. Please use the 'External Link' option for now.");
+          Toasts.showTostError(
+              message:
+                  "The cover image is too large. Please use a smaller file.");
         } else {
-          rethrow;
+          Toasts.showTostError(message: "Cover upload failed: ${e.message}");
         }
+        return;
+      } catch (e) {
+        Toasts.showTostError(
+            message: "An unexpected error occurred during cover upload: $e");
         return;
       }
 
-      final coverUrl = supabase.storage.from('documents').getPublicUrl(coverPath);
+      final coverUrl =
+          supabase.storage.from('documents').getPublicUrl(coverPath);
 
       String docUrl = "";
       String docName = "";
@@ -112,12 +138,19 @@ class UploadController extends GetxController {
         try {
           await supabase.storage.from('documents').upload(docPath, docFile);
         } on StorageException catch (e) {
-           if (e.statusCode == '413') {
-             Toasts.showTostError(message: "Direct storage is currently at capacity. Sharing via a link is recommended.");
-           } else {
-             rethrow;
-           }
-           return;
+          if (e.statusCode == '413') {
+            Toasts.showTostError(
+                message: "This document is too large. 10MB limit applies.");
+          } else {
+            Toasts.showTostError(
+                message: "Document upload failed: ${e.message}");
+          }
+          return;
+        } catch (e) {
+          Toasts.showTostError(
+              message:
+                  "An unexpected error occurred during document upload: $e");
+          return;
         }
 
         docUrl = supabase.storage.from('documents').getPublicUrl(docPath);
@@ -136,12 +169,14 @@ class UploadController extends GetxController {
         'is_external': isExternalLink.value,
       });
 
-      Toasts.showTostSuccess(message: "Your contribution has been shared with the community!");
+      Toasts.showTostSuccess(
+          message: "Your contribution has been shared with the community!");
       clearForm();
       Get.back();
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Database error: ${e.message}");
     } catch (e) {
-
-      Toasts.showTostError(message: "We encountered an issue while saving your notes. Please try again in a moment.");
+      Toasts.showTostError(message: "An unexpected error occurred: $e");
     } finally {
       isLoading.value = false;
     }
