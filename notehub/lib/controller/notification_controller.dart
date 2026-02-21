@@ -45,6 +45,9 @@ class NotificationController extends GetxController {
     final userId = HiveBoxes.userId;
     if (userId.isEmpty) return;
 
+    // Clean up existing channel if any
+    _channel?.unsubscribe();
+
     _channel = supabase
         .channel('public:notifications')
         .onPostgresChanges(

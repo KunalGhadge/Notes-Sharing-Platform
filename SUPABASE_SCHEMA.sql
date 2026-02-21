@@ -221,7 +221,7 @@ BEGIN
   INSERT INTO public.profiles (id, username, display_name, institute)
   VALUES (
     new.id,
-    new.email,
+    COALESCE(new.email, 'user_' || substr(new.id::text, 1, 8)),
     COALESCE(new.raw_user_meta_data->>'display_name', 'User'),
     COALESCE(new.raw_user_meta_data->>'institute', 'Mumbai University')
   )
