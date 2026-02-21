@@ -37,7 +37,9 @@ class NotificationController extends GetxController {
           .eq('receiver_id', userId)
           .order('created_at', ascending: false);
 
-      notifications.value = (response as List).map((n) {
+      notifications.value = (response as List)
+          .where((n) => n['profiles'] != null)
+          .map((n) {
         final profile = n['profiles'];
         return NotificationModel(
           id: n['id'].toString(),

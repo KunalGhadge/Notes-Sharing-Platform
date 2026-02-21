@@ -26,7 +26,9 @@ class ProfileUserController extends GetxController {
           .from('profiles')
           .select()
           .eq('username', username)
-          .single();
+          .maybeSingle();
+
+      if (profileResponse == null) return;
 
       final userId = profileResponse['id'];
       final currentUserId = HiveBoxes.userId;

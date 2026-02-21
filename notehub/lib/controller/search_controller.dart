@@ -46,6 +46,8 @@ class AppSearchController extends GetxController {
 
     for (var doc in response) {
       final profile = doc['profiles'];
+      if (profile == null) continue;
+
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 

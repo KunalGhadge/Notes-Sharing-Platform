@@ -71,19 +71,26 @@ class AuthController extends GetxController {
           'display_name': displayNameController.text.trim(),
           'institute': instituteController.text.trim(),
         },
+        emailRedirectTo: 'io.supabase.flutternotehub://login-callback',
       );
 
       if (response.user != null) {
-        await supabase.from('profiles').upsert({
-          'id': response.user!.id,
-          'username': emailEditingController.text.trim(),
-          'display_name': displayNameController.text.trim(),
-          'institute': instituteController.text.trim(),
-        });
+        if (response.session != null) {
+          await supabase.from('profiles').upsert({
+            'id': response.user!.id,
+            'username': emailEditingController.text.trim(),
+            'display_name': displayNameController.text.trim(),
+            'institute': instituteController.text.trim(),
+          });
 
-        await fetchAndStoreProfile(response.user!);
-        Toasts.showTostSuccess(message: "Registration successful!");
-        Get.offAll(() => const Layout());
+          await fetchAndStoreProfile(response.user!);
+          Toasts.showTostSuccess(message: "Registration successful!");
+          Get.offAll(() => const Layout());
+        } else {
+          Toasts.showTostSuccess(
+              message: "Please check your email to confirm your account!");
+          isRegister.value = false; // Switch back to login for when they return
+        }
       }
     } on AuthException catch (error) {
       Toasts.showTostError(message: error.message);
@@ -94,26 +101,45 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> fetchAndStoreProfile(User user) async {
-    final profileData = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .single();
+  Future<void> fetchAndStoreProfile(User user, {int retryCount = 0}) async {
+    try {
+      final profileData = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
 
-    final counts = await getCounts(user.id);
+      if (profileData == null) {
+        if (retryCount > 1) throw Exception("Profile creation failed");
 
-    var newUser = UserModel(
-      id: user.id,
-      displayName: profileData['display_name'] ?? "User",
-      username: profileData['username'],
-      institute: profileData['institute'] ?? "Mumbai University",
-      profile: profileData['profile_url'] ?? "NA",
-      documents: counts['documents'] ?? 0,
-      followers: counts['followers'] ?? 0,
-      following: counts['following'] ?? 0,
-    );
-    await HiveBoxes.setUser(newUser);
+        // Create profile from metadata if it doesn't exist
+        final metadata = user.userMetadata ?? {};
+        await supabase.from('profiles').upsert({
+          'id': user.id,
+          'username': user.email ?? "user_${user.id.substring(0, 5)}",
+          'display_name': metadata['display_name'] ?? "User",
+          'institute': metadata['institute'] ?? "Mumbai University",
+        });
+        // Retry fetching the newly created profile
+        return await fetchAndStoreProfile(user, retryCount: retryCount + 1);
+      }
+
+      final counts = await getCounts(user.id);
+
+      var newUser = UserModel(
+        id: user.id,
+        displayName: profileData['display_name'] ?? "User",
+        username: profileData['username'],
+        institute: profileData['institute'] ?? "Mumbai University",
+        profile: profileData['profile_url'] ?? "NA",
+        documents: counts['documents'] ?? 0,
+        followers: counts['followers'] ?? 0,
+        following: counts['following'] ?? 0,
+      );
+      await HiveBoxes.setUser(newUser);
+    } catch (e) {
+      Toasts.showTostError(message: "Failed to load user profile");
+    }
   }
 
   Future<Map<String, int>> getCounts(String userId) async {
