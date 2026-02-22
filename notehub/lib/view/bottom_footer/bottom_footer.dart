@@ -18,7 +18,7 @@ class BottomFooter extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             spreadRadius: 2,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -38,17 +38,22 @@ class BottomFooter extends StatelessWidget {
                 onTap: () => controller.currentPage.value = 0,
               ),
               _buildNavItem(
-                icon: Icons.search_rounded,
+                icon: Icons.verified_user_rounded, // Official icon
                 isSelected: controller.currentPage.value == 1,
                 onTap: () => controller.currentPage.value = 1,
               ),
               _buildNavItem(
-                icon: Icons.add_circle_outline_rounded,
+                icon: Icons.search_rounded,
                 isSelected: controller.currentPage.value == 2,
                 onTap: () => controller.currentPage.value = 2,
               ),
-              GestureDetector(
+              _buildNavItem(
+                icon: Icons.add_circle_outline_rounded,
+                isSelected: controller.currentPage.value == 3,
                 onTap: () => controller.currentPage.value = 3,
+              ),
+              GestureDetector(
+                onTap: () => controller.currentPage.value = 4,
                 child: Obx(() {
                   final profileController = Get.find<ProfileController>();
                   return Container(
@@ -56,7 +61,7 @@ class BottomFooter extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: controller.currentPage.value == 3
+                        color: controller.currentPage.value == 4
                             ? PrimaryColor.shade500
                             : Colors.transparent,
                         width: 2,
@@ -87,7 +92,9 @@ class BottomFooter extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isSelected ? PrimaryColor.shade500.withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected
+              ? PrimaryColor.shade500.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Icon(

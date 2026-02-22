@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/model/document_model.dart';
+import 'package:notehub/view/widgets/toasts.dart';
 
 class AppSearchController extends GetxController {
   final supabase = Supabase.instance.client;
@@ -16,9 +17,7 @@ class AppSearchController extends GetxController {
 
     isLoading.value = true;
     try {
-      var request = supabase
-          .from('documents')
-          .select('''
+      var request = supabase.from('documents').select('''
             *,
             profiles:user_id (id, username, display_name, profile_url),
             interactions:interactions(user_id, type),
@@ -35,7 +34,11 @@ class AppSearchController extends GetxController {
 
       final response = await request.order('created_at', ascending: false);
       results.value = _mapDocuments(response);
-    } catch (e) { /* silent */ } finally {
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Search error: ${e.message}");
+    } catch (e) {
+      Toasts.showTostError(message: "Unexpected error during search: $e");
+    } finally {
       isLoading.value = false;
     }
   }
@@ -44,27 +47,26 @@ class AppSearchController extends GetxController {
     final List<DocumentModel> tmp = [];
     final currentUserId = HiveBoxes.userId;
 
-    for (var doc in response) {
+    for (var doc in (response as List)) {
       final profile = doc['profiles'];
-      if (profile == null) continue;
+      // if (profile == null) continue; // DON'T SKIP - use fallback instead
 
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
 
-      final interaction = interactions.firstWhere(
-        (i) => i['user_id'] == currentUserId,
-        orElse: () => null
-      );
+      final interaction = interactions
+          .firstWhere((i) => i['user_id'] == currentUserId, orElse: () => null);
 
       final isLiked = interaction != null && interaction['type'] == 'like';
-      final isDisliked = interaction != null && interaction['type'] == 'dislike';
+      final isDisliked =
+          interaction != null && interaction['type'] == 'dislike';
       final isBookmarked = bookmarks.any((b) => b['user_id'] == currentUserId);
 
       tmp.add(DocumentModel(
         documentId: doc['id'].toString(),
-        username: profile['username'],
-        displayName: profile['display_name'] ?? "User",
-        profile: profile['profile_url'] ?? "NA",
+        username: profile?['username'] ?? "unknown",
+        displayName: profile?['display_name'] ?? "Contributor",
+        profile: profile?['profile_url'] ?? "NA",
         isFollowedByUser: false,
         name: doc['name'],
         topic: doc['topic'] ?? "",

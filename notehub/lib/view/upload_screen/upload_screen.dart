@@ -67,7 +67,7 @@ class _UploadScreenState extends State<UploadScreen> {
               () => Get.find<UploadController>().isLoading.value
                   ? Positioned.fill(
                       child: Container(
-                        color: Colors.black.withValues(alpha: .3),
+                        color: Colors.black.withOpacity(0.1),
                         child: const Center(child: Loader()),
                       ),
                     )

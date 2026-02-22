@@ -9,6 +9,8 @@ import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/view/bottom_footer/bottom_footer.dart';
 
+import 'package:notehub/controller/remote_config_controller.dart';
+
 class Layout extends StatefulWidget {
   const Layout({super.key});
 
@@ -20,6 +22,7 @@ class _LayoutState extends State<Layout> {
   @override
   void initState() {
     super.initState();
+    Get.put(RemoteConfigController());
     Get.put(ProfileController());
     Get.put(ProfileUserController());
     Get.put(ShowcaseController());

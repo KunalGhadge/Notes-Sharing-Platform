@@ -20,8 +20,10 @@ class UserModel {
   final int followers;
   @HiveField(6)
   final int documents;
-  @HiveField(7)
+  @HiveField(24)
   final bool isFollowedByUser;
+  @HiveField(25)
+  final bool isAdmin;
   @HiveField(9)
   final List<String> academicInterests;
 
@@ -32,6 +34,7 @@ class UserModel {
     required this.institute,
     required this.profile,
     this.isFollowedByUser = false,
+    this.isAdmin = false,
     this.followers = 0,
     this.following = 0,
     this.documents = 0,
@@ -48,6 +51,7 @@ class UserModel {
     int? following,
     int? documents,
     bool? isFollowedByUser,
+    bool? isAdmin,
     List<String>? academicInterests,
   }) {
     return UserModel(
@@ -60,6 +64,7 @@ class UserModel {
       following: following ?? this.following,
       documents: documents ?? this.documents,
       isFollowedByUser: isFollowedByUser ?? this.isFollowedByUser,
+      isAdmin: isAdmin ?? this.isAdmin,
       academicInterests: academicInterests ?? this.academicInterests,
     );
   }

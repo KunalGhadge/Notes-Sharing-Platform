@@ -14,6 +14,7 @@ import 'package:notehub/view/document_screen/widget/follow_button.dart';
 import 'package:notehub/view/document_screen/widget/comment_section.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/secondary_button.dart';
+import 'package:notehub/view/widgets/admin_badge.dart';
 
 class Document extends StatefulWidget {
   final DocumentModel document;
@@ -61,8 +62,10 @@ class _DocumentState extends State<Document> {
             const SizedBox(height: 24),
             DocDescription(document: widget.document),
             const SizedBox(height: 32),
-            _renderDownloader(),
-            const SizedBox(height: 32),
+            if (widget.document.postType == 'note') ...[
+              _renderDownloader(),
+              const SizedBox(height: 32),
+            ],
             const Divider(),
             const SizedBox(height: 24),
             CommentSection(docId: widget.document.documentId),
@@ -81,9 +84,18 @@ class _DocumentState extends State<Document> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.document.displayName,
-                style: AppTypography.subHead1
-                    .copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Text(widget.document.displayName,
+                    style: AppTypography.subHead1
+                        .copyWith(fontWeight: FontWeight.bold)),
+                if (widget.document.isOfficial) // Admins are usually official
+                  const Padding(
+                    padding: EdgeInsets.only(left: 6),
+                    child: AdminBadge(fontSize: 8),
+                  ),
+              ],
+            ),
             Text(widget.document.username,
                 style: AppTypography.body4.copyWith(color: Colors.grey)),
           ],
@@ -93,7 +105,26 @@ class _DocumentState extends State<Document> {
             HiveBoxes.username != widget.document.username)
           FollowButton(document: widget.document)
         else if (HiveBoxes.username == widget.document.username)
-          Icon(Icons.edit_note_rounded, color: PrimaryColor.shade500, size: 28),
+          GetBuilder<DocumentController>(
+            builder: (controller) => GestureDetector(
+              onTap: () {
+                Get.defaultDialog(
+                  title: "Delete Document",
+                  middleText: "Are you sure you want to delete this resource?",
+                  textConfirm: "Delete",
+                  textCancel: "Cancel",
+                  confirmTextColor: Colors.white,
+                  buttonColor: DangerColors.shade500,
+                  onConfirm: () {
+                    Get.back();
+                    controller.deleteDocument(widget.document);
+                  },
+                );
+              },
+              child: Icon(Icons.delete_outline_rounded,
+                  color: DangerColors.shade500, size: 28),
+            ),
+          ),
       ],
     );
   }
@@ -126,8 +157,7 @@ class _DocumentState extends State<Document> {
             width: 60,
             onTap: () {
               FileDownload.download(
-                url: widget.document.document,
-                name: widget.document.documentName,
+                document: widget.document,
                 flutterLocalNotificationsPlugin:
                     flutterLocalNotificationsPlugin,
               );

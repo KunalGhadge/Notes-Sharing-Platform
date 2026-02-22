@@ -9,10 +9,11 @@ import 'package:notehub/service/file_download.dart';
 import 'package:notehub/view/widgets/loader.dart';
 import 'package:notehub/view/widgets/normal_button.dart';
 
+import 'package:notehub/model/document_model.dart';
+
 class IconViewer extends StatelessWidget {
-  final String image;
-  final String name;
-  const IconViewer({super.key, required this.image, required this.name});
+  final DocumentModel document;
+  const IconViewer({super.key, required this.document});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +22,7 @@ class IconViewer extends StatelessWidget {
         actions: [
           NormalButton(
             onPressed: () => FileDownload.download(
-              url: image,
-              name: name,
+              document: document,
             ),
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -39,9 +39,9 @@ class IconViewer extends StatelessWidget {
         ],
       ),
       body: Hero(
-        tag: "IconViewer: $image",
+        tag: "IconViewer: ${document.icon}",
         child: CachedNetworkImage(
-          imageUrl: image,
+          imageUrl: document.icon,
           placeholder: (context, url) => const Loader(),
           fit: BoxFit.fill,
           width: Get.width,

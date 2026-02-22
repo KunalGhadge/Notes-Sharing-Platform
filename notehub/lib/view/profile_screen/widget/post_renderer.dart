@@ -16,45 +16,48 @@ class PostsRenderer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ShowcaseController>(tag: usernameTag);
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return Container(
-          margin: const EdgeInsets.only(top: 15),
-          child: ListView.builder(
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return Shimmer.fromColors(
-                baseColor: GrayscaleWhiteColors.almostWhite,
-                highlightColor: GrayscaleWhiteColors.white,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: Colors.white,
-                  ),
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  height: 100,
-                  width: Get.width,
-                ),
-              );
-            },
-          ),
-        );
-      }
-      if (posts.isEmpty) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.folder_open_rounded, size: 60, color: Colors.grey[300]),
-            const SizedBox(height: 10),
-            const Center(child: Text("No Documents to Display")),
-          ],
-        );
-      } else {
+    return Obx(
+      () {
+        if (controller.isLoading.value) {
           return Container(
             margin: const EdgeInsets.only(top: 15),
+            child: ListView.builder(
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                return Shimmer.fromColors(
+                  baseColor: GrayscaleWhiteColors.almostWhite,
+                  highlightColor: GrayscaleWhiteColors.white,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                    ),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    height: 100,
+                    width: Get.width,
+                  ),
+                );
+              },
+            ),
+          );
+        }
+        if (posts.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.folder_open_rounded, size: 60, color: Colors.grey),
+                SizedBox(height: 10),
+                Text("No Documents to Display"),
+              ],
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.only(top: 15),
             child: ListView.builder(
               itemCount: posts.length,
               itemBuilder: (context, index) {

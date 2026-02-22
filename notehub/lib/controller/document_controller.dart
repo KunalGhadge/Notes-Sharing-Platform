@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
@@ -6,6 +7,8 @@ import 'package:notehub/service/file_caching.dart';
 import 'package:notehub/view/widgets/toasts.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:notehub/controller/home_controller.dart';
 
 class DocumentController extends GetxController {
   final supabase = Supabase.instance.client;
@@ -39,7 +42,11 @@ class DocumentController extends GetxController {
           ''').eq('user_id', userId).order('created_at', ascending: false);
 
       userDocs.value = _mapDocuments(response as List);
-    } catch (e) {/* silent */} finally {
+    } on PostgrestException catch (e) {
+      Toasts.showTostError(message: "Feed error: ${e.message}");
+    } catch (e) {
+      Toasts.showTostError(message: "Unexpected error: $e");
+    } finally {
       isLoading.value = false;
     }
   }
@@ -83,6 +90,8 @@ class DocumentController extends GetxController {
         isDisliked: isDisliked,
         isBookmarked: isBookmarked,
         isExternal: doc['is_external'] ?? false,
+        isOfficial: doc['is_official'] ?? false,
+        postType: doc['post_type'] ?? 'note',
       ));
     }
     return tmp;
@@ -92,29 +101,42 @@ class DocumentController extends GetxController {
     final userId = HiveBoxes.userId;
     if (userId.isEmpty) return;
 
+    // Optimistic Update
+    final wasLiked = doc.isLiked;
+    final originalLikes = doc.likes;
+
+    doc.isLiked = !doc.isLiked;
+    doc.likes += doc.isLiked ? 1 : -1;
+    update();
+
     try {
-      if (doc.isLiked) {
+      if (wasLiked) {
         await supabase
             .from('interactions')
             .delete()
             .match({'user_id': userId, 'document_id': doc.documentId});
         await supabase
             .rpc('decrement_likes', params: {'doc_id': doc.documentId});
-        doc.likes -= 1;
       } else {
-        if (doc.isDisliked) await toggleDislike(doc);
+        if (doc.isDisliked)
+          await toggleDislike(
+              doc); // Re-recursive call will handle its own optic
         await supabase.from('interactions').upsert(
             {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
         await supabase
             .rpc('increment_likes', params: {'doc_id': doc.documentId});
-        doc.likes += 1;
         _createNotification(doc.documentId, 'like');
       }
-      doc.isLiked = !doc.isLiked;
-      update();
     } on PostgrestException catch (e) {
+      // Revert on error
+      doc.isLiked = wasLiked;
+      doc.likes = originalLikes;
+      update();
       Toasts.showTostError(message: "Could not update like: ${e.message}");
     } catch (e) {
+      doc.isLiked = wasLiked;
+      doc.likes = originalLikes;
+      update();
       Toasts.showTostError(message: "An unexpected error occurred: $e");
     }
   }
@@ -123,15 +145,22 @@ class DocumentController extends GetxController {
     final userId = HiveBoxes.userId;
     if (userId.isEmpty) return;
 
+    // Optimistic Update
+    final wasDisliked = doc.isDisliked;
+    final originalDislikes = doc.dislikes;
+
+    doc.isDisliked = !doc.isDisliked;
+    doc.dislikes += doc.isDisliked ? 1 : -1;
+    update();
+
     try {
-      if (doc.isDisliked) {
+      if (wasDisliked) {
         await supabase
             .from('interactions')
             .delete()
             .match({'user_id': userId, 'document_id': doc.documentId});
         await supabase
             .rpc('decrement_dislikes', params: {'doc_id': doc.documentId});
-        doc.dislikes -= 1;
       } else {
         if (doc.isLiked) await toggleLike(doc);
         await supabase.from('interactions').upsert({
@@ -141,13 +170,17 @@ class DocumentController extends GetxController {
         });
         await supabase
             .rpc('increment_dislikes', params: {'doc_id': doc.documentId});
-        doc.dislikes += 1;
       }
-      doc.isDisliked = !doc.isDisliked;
-      update();
     } on PostgrestException catch (e) {
+      // Revert
+      doc.isDisliked = wasDisliked;
+      doc.dislikes = originalDislikes;
+      update();
       Toasts.showTostError(message: "Could not update dislike: ${e.message}");
     } catch (e) {
+      doc.isDisliked = wasDisliked;
+      doc.dislikes = originalDislikes;
+      update();
       Toasts.showTostError(message: "An unexpected error occurred: $e");
     }
   }
@@ -159,8 +192,12 @@ class DocumentController extends GetxController {
       return;
     }
 
+    final originalState = doc.isBookmarked;
+    doc.isBookmarked = !doc.isBookmarked;
+    update(); // Optimistic UI
+
     try {
-      if (doc.isBookmarked) {
+      if (originalState) {
         await supabase
             .from('bookmarks')
             .delete()
@@ -170,12 +207,55 @@ class DocumentController extends GetxController {
             .from('bookmarks')
             .insert({'user_id': userId, 'document_id': doc.documentId});
       }
-      doc.isBookmarked = !doc.isBookmarked;
+    } catch (e) {
+      doc.isBookmarked = originalState;
       update();
+      Toasts.showTostError(message: "Bookmark sync failed");
+    }
+  }
+
+  Future<void> deleteDocument(DocumentModel doc) async {
+    final userId = HiveBoxes.userId;
+    if (userId.isEmpty || doc.username != HiveBoxes.username) {
+      Toasts.showTostError(message: "Permission denied.");
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      // 1. Delete from Storage if it's a direct upload
+      if (!doc.isExternal &&
+          doc.document != null &&
+          doc.document!.contains('storage/v1/object/public')) {
+        try {
+          final uri = Uri.parse(doc.document!);
+          final path = uri.pathSegments
+              .sublist(uri.pathSegments.indexOf('documents') + 1)
+              .join('/');
+          await supabase.storage.from('documents').remove([path]);
+        } catch (storageError) {
+          debugPrint("Storage cleanup minor error: $storageError");
+        }
+      }
+
+      // 2. Delete from Database (Cascades to comments, likes, notifications)
+      await supabase.from('documents').delete().eq('id', doc.documentId);
+
+      Toasts.showTostSuccess(message: "Document deleted successfully.");
+
+      // Refresh global states
+      Get.find<HomeController>().fetchUpdates();
+      // If we are in detail view, go back
+      if (Get.currentRoute.contains('Document')) {
+        Get.back();
+      }
     } on PostgrestException catch (e) {
-      Toasts.showTostError(message: "Action failed: ${e.message}");
+      Toasts.showTostError(message: "Delete failed: ${e.message}");
     } catch (e) {
       Toasts.showTostError(message: "An unexpected error occurred: $e");
+    } finally {
+      isLoading.value = false;
+      update();
     }
   }
 
@@ -203,7 +283,8 @@ class DocumentController extends GetxController {
 
   void openDocument(DocumentModel doc) async {
     if (doc.isExternal) {
-      final uri = Uri.parse(doc.document);
+      if (doc.document == null) return;
+      final uri = Uri.parse(doc.document!);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
@@ -212,9 +293,27 @@ class DocumentController extends GetxController {
                 "Our systems encountered an issue opening this link. Please verify it's a valid URL.");
       }
     } else {
-      String path =
-          await saveAndOpenFile(uri: doc.document, name: doc.documentName);
+      if (doc.document == null) {
+        Toasts.showTostError(message: "No document attached to this post");
+        return;
+      }
+      String path = await saveAndOpenFile(
+          uri: doc.document!, name: doc.documentName ?? 'document');
       OpenFile.open(path);
     }
+  }
+
+  void _syncWithHome() {
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().update();
+      }
+    } catch (e) {}
+  }
+
+  @override
+  void update([List<Object>? ids, bool condition = true]) {
+    super.update(ids, condition);
+    _syncWithHome();
   }
 }

@@ -4,6 +4,7 @@ import 'package:notehub/controller/profile_user_controller.dart';
 import 'package:notehub/controller/showcase_controller.dart';
 import 'package:notehub/core/config/color.dart';
 import 'package:notehub/core/config/typography.dart';
+import 'package:notehub/core/helper/hive_boxes.dart';
 import 'package:notehub/core/meta/app_meta.dart';
 import 'package:notehub/model/user_model.dart';
 import 'package:notehub/view/profile_screen/widget/follower_widget.dart';
@@ -11,6 +12,8 @@ import 'package:notehub/view/profile_screen/widget/profile_showcase.dart';
 import 'package:notehub/view/widgets/primary_button.dart';
 import 'package:notehub/view/widgets/refresher_widget.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:notehub/view/widgets/admin_badge.dart';
 
 class ProfileUser extends StatefulWidget {
   final String username;
@@ -30,10 +33,17 @@ class _ProfileUserState extends State<ProfileUser> {
   }
 
   Future<void> loadUserData() async {
+    final myUsername = HiveBoxes.username.toLowerCase();
+    final targetUsername = widget.username.toLowerCase();
+
     Get.find<ProfileUserController>(tag: widget.username)
         .fetchUserData(username: widget.username);
-    Get.find<ShowcaseController>(tag: widget.username)
-        .fetchProfilePosts(username: widget.username);
+    final showcase = Get.find<ShowcaseController>(tag: widget.username);
+    showcase.fetchProfilePosts(username: widget.username);
+
+    if (myUsername == targetUsername) {
+      showcase.fetchSavedPosts(username: widget.username);
+    }
   }
 
   @override
@@ -86,7 +96,8 @@ class ProfileHeader extends StatelessWidget {
         children: [
           TopSection(profileData: profileData),
           const SizedBox(height: 24),
-          ButtonSection(profileData: profileData),
+          ButtonSection(
+              profileData: profileData, usernameTag: profileData.username),
         ],
       ),
     );
@@ -130,9 +141,19 @@ class TopSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            profileData.displayName,
-            style: AppTypography.heading6.copyWith(fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Text(
+                profileData.displayName,
+                style: AppTypography.heading6
+                    .copyWith(fontWeight: FontWeight.bold),
+              ),
+              if (profileData.isAdmin)
+                const Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: AdminBadge(),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Row(
@@ -154,7 +175,21 @@ class TopSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: PrimaryColor.shade500, width: 2),
+        border: Border.all(
+          color: profileData.isAdmin
+              ? const Color(0xFFFFD700)
+              : PrimaryColor.shade500,
+          width: 2,
+        ),
+        boxShadow: profileData.isAdmin
+            ? [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                )
+              ]
+            : null,
       ),
       child: CircleAvatar(
         radius: 40,
@@ -171,14 +206,16 @@ class TopSection extends StatelessWidget {
 
 class ButtonSection extends StatelessWidget {
   final UserModel profileData;
-  const ButtonSection({super.key, required this.profileData});
+  final String usernameTag;
+  const ButtonSection(
+      {super.key, required this.profileData, required this.usernameTag});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: Get.width,
       child: GetX<ProfileUserController>(
-        tag: profileData.username,
+        tag: usernameTag,
         builder: (controller) {
           return Row(
             children: [
@@ -202,14 +239,23 @@ class ButtonSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: PrimaryColor.shade100,
-                  borderRadius: BorderRadius.circular(12),
+              InkWell(
+                onTap: () {
+                  Share.share(
+                    "Check out ${profileData.displayName}'s profile on ${AppMetaData.appName}! 📚 Find quality study notes and contribute to the community. Username: @${profileData.username}",
+                    subject: "${profileData.displayName}'s Profile",
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: PrimaryColor.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.share_outlined,
+                      color: PrimaryColor.shade500, size: 24),
                 ),
-                child: Icon(Icons.share_outlined,
-                    color: PrimaryColor.shade500, size: 24),
               ),
             ],
           );

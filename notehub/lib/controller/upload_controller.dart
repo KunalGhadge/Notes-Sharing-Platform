@@ -21,6 +21,10 @@ class UploadController extends GetxController {
   var selectedDocument = Rxn<PlatformFile>();
   var selectedCover = Rxn<PlatformFile>();
 
+  // Admin Features
+  var isOfficial = false.obs;
+  var postType = 'note'.obs; // 'note' or 'tweet'
+
   Future<void> pickFile(String state) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: state == "cover" ? FileType.image : FileType.any,
@@ -44,27 +48,30 @@ class UploadController extends GetxController {
       return;
     }
 
-    if (isExternalLink.value) {
-      if (linkEditingController.text.isEmpty) {
-        Toasts.showTostWarning(
-            message: "Please provide a valid external resource link.");
-        return;
-      }
-    } else {
-      if (selectedDocument.value == null) {
-        Toasts.showTostWarning(message: "Please select a document to upload.");
-        return;
-      }
-      // 10MB Limit Check
-      if (selectedDocument.value!.size > 10 * 1024 * 1024) {
-        Toasts.showTostWarning(
-            message:
-                "This file exceeds our 10MB direct upload limit. To help us stay free, please use a Google Drive or Mega link instead.");
-        return;
+    if (postType.value == 'note') {
+      if (isExternalLink.value) {
+        if (linkEditingController.text.isEmpty) {
+          Toasts.showTostWarning(
+              message: "Please provide a valid external resource link.");
+          return;
+        }
+      } else {
+        if (selectedDocument.value == null) {
+          Toasts.showTostWarning(
+              message: "Please select a document to upload.");
+          return;
+        }
+        // 10MB Limit Check
+        if (selectedDocument.value!.size > 10 * 1024 * 1024) {
+          Toasts.showTostWarning(
+              message:
+                  "This file exceeds our 10MB direct upload limit. To help us stay free, please use a Google Drive or Mega link instead.");
+          return;
+        }
       }
     }
 
-    if (selectedCover.value == null) {
+    if (postType.value == 'note' && selectedCover.value == null) {
       Toasts.showTostWarning(
           message: "A cover image helps others find your notes easily.");
       return;
@@ -93,44 +100,52 @@ class UploadController extends GetxController {
       final sanitizedName =
           nameEditingController.text.replaceAll(RegExp(r'[^\w\s\-]'), '_');
 
-      // 1. Compress and Upload Cover
-      File coverFile = File(selectedCover.value!.path!);
-      File? compressedCover = await ImageHelper.compressImage(coverFile);
+      String coverUrl = "";
+      if (selectedCover.value != null) {
+        // 1. Compress and Upload Cover
+        File coverFile = File(selectedCover.value!.path!);
+        File? compressedCover = await ImageHelper.compressImage(coverFile);
 
-      final coverPath = '$userId/covers/${timestamp}_$sanitizedName.jpg';
+        final coverPath = '$userId/covers/${timestamp}_$sanitizedName.jpg';
 
-      try {
-        await supabase.storage.from('documents').upload(
-              coverPath,
-              compressedCover ?? coverFile,
-              fileOptions: const FileOptions(contentType: 'image/jpeg'),
-            );
-      } on StorageException catch (e) {
-        if (e.statusCode == '413') {
+        try {
+          await supabase.storage.from('documents').upload(
+                coverPath,
+                compressedCover ?? coverFile,
+                fileOptions: const FileOptions(contentType: 'image/jpeg'),
+              );
+          coverUrl = supabase.storage.from('documents').getPublicUrl(coverPath);
+        } on StorageException catch (e) {
+          if (e.statusCode == '413') {
+            Toasts.showTostError(
+                message:
+                    "The cover image is too large. Please use a smaller file.");
+          } else {
+            Toasts.showTostError(message: "Cover upload failed: ${e.message}");
+          }
+          return;
+        } catch (e) {
           Toasts.showTostError(
-              message:
-                  "The cover image is too large. Please use a smaller file.");
-        } else {
-          Toasts.showTostError(message: "Cover upload failed: ${e.message}");
+              message: "An unexpected error occurred during cover upload: $e");
+          return;
         }
-        return;
-      } catch (e) {
-        Toasts.showTostError(
-            message: "An unexpected error occurred during cover upload: $e");
-        return;
       }
-
-      final coverUrl =
-          supabase.storage.from('documents').getPublicUrl(coverPath);
 
       String docUrl = "";
       String docName = "";
 
-      if (isExternalLink.value) {
+      if (postType.value == 'tweet') {
+        docUrl = "";
+        docName = "Tweet";
+      } else if (isExternalLink.value) {
         docUrl = linkEditingController.text.trim();
         docName = "External Resource";
       } else {
         // 2. Upload Document
+        if (selectedDocument.value == null ||
+            selectedDocument.value!.path == null) {
+          throw Exception("No document selected for 'Note' type.");
+        }
         final docFile = File(selectedDocument.value!.path!);
         final docExt = p.extension(docFile.path);
         final docPath = '$userId/docs/${timestamp}_$sanitizedName$docExt';
@@ -163,10 +178,12 @@ class UploadController extends GetxController {
         'name': nameEditingController.text.trim(),
         'topic': topicEditingController.text.trim(),
         'description': descriptionEditingController.text.trim(),
-        'document_url': docUrl,
+        'document_url': postType.value == 'tweet' ? null : docUrl,
         'cover_url': coverUrl,
-        'document_name': docName,
+        'document_name': postType.value == 'tweet' ? 'Tweet' : docName,
         'is_external': isExternalLink.value,
+        'is_official': isOfficial.value,
+        'post_type': postType.value,
       });
 
       Toasts.showTostSuccess(
@@ -189,5 +206,7 @@ class UploadController extends GetxController {
     linkEditingController.clear();
     selectedDocument.value = null;
     selectedCover.value = null;
+    isOfficial.value = false;
+    postType.value = 'note';
   }
 }

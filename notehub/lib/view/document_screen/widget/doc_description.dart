@@ -16,17 +16,20 @@ class DocDescription extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(document.name, style: AppTypography.heading6.copyWith(fontWeight: FontWeight.bold)),
+        Text(document.name,
+            style:
+                AppTypography.heading6.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text(document.topic, style: AppTypography.subHead2.copyWith(color: PrimaryColor.shade500)),
+        Text(document.topic,
+            style:
+                AppTypography.subHead2.copyWith(color: PrimaryColor.shade500)),
         const SizedBox(height: 16),
         _renderDescription(),
         const SizedBox(height: 24),
         GestureDetector(
           onTap: () => Get.to(
             () => IconViewer(
-              image: document.icon,
-              name: document.iconName,
+              document: document,
             ),
           ),
           child: Hero(
@@ -41,7 +44,8 @@ class DocDescription extends StatelessWidget {
                 errorWidget: (context, url, error) => Container(
                   height: 300,
                   color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported_outlined, size: 50),
+                  child:
+                      const Icon(Icons.image_not_supported_outlined, size: 50),
                 ),
               ),
             ),
@@ -65,14 +69,18 @@ class DocDescription extends StatelessWidget {
       builder: (controller) => Row(
         children: [
           _interactionButton(
-            icon: document.isLiked ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+            icon: document.isLiked
+                ? Icons.thumb_up_rounded
+                : Icons.thumb_up_outlined,
             count: document.likes,
             color: document.isLiked ? Colors.blue : Colors.grey,
             onTap: () => controller.toggleLike(document),
           ),
           const SizedBox(width: 16),
           _interactionButton(
-            icon: document.isDisliked ? Icons.thumb_down_rounded : Icons.thumb_down_outlined,
+            icon: document.isDisliked
+                ? Icons.thumb_down_rounded
+                : Icons.thumb_down_outlined,
             count: document.dislikes,
             color: document.isDisliked ? Colors.orange : Colors.grey,
             onTap: () => controller.toggleDislike(document),
@@ -82,7 +90,8 @@ class DocDescription extends StatelessWidget {
             onTap: () => controller.toggleBookmark(document),
             child: Icon(
               document.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
+              color:
+                  document.isBookmarked ? PrimaryColor.shade500 : Colors.grey,
               size: 28,
             ),
           ),
@@ -103,14 +112,20 @@ class DocDescription extends StatelessWidget {
     );
   }
 
-  Widget _interactionButton({required IconData icon, required int count, required Color color, required VoidCallback onTap}) {
+  Widget _interactionButton(
+      {required IconData icon,
+      required int count,
+      required Color color,
+      required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Row(
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(width: 6),
-          Text(count.toString(), style: AppTypography.body2.copyWith(color: color, fontWeight: FontWeight.bold)),
+          Text(count.toString(),
+              style: AppTypography.body2
+                  .copyWith(color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );

@@ -24,12 +24,14 @@ class AboutPage extends StatelessWidget {
                 gradient: AppGradients.premiumGradient,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.school_rounded, size: 80, color: Colors.white),
+              child: const Icon(Icons.school_rounded,
+                  size: 80, color: Colors.white),
             ),
             const SizedBox(height: 24),
             Text(
               AppMetaData.appName,
-              style: AppTypography.heading4.copyWith(color: PrimaryColor.shade500),
+              style:
+                  AppTypography.heading4.copyWith(color: PrimaryColor.shade500),
             ),
             const SizedBox(height: 12),
             Text(
@@ -40,13 +42,15 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 40),
             _buildSection(
               title: "Our Vision",
-              content: "A dedicated community where Mumbai University students and seniors guide each other by sharing quality notes, PYQs (Previous Year Questions), and IMPs (Important Questions). We aim to make studying more accessible and collaborative for everyone.",
+              content:
+                  "A dedicated community where Mumbai University students and seniors guide each other by sharing quality notes, PYQs (Previous Year Questions), and IMPs (Important Questions). We aim to make studying more accessible and collaborative for everyone.",
               icon: Icons.visibility_rounded,
             ),
             const SizedBox(height: 24),
             _buildSection(
               title: "Meet the Developers",
-              content: "Built with passion by Kunal and SharonRaj. We are committed to empowering students through technology and community-driven learning.",
+              content:
+                  "Built with passion by Kunal and SharonRaj. We are committed to empowering students through technology and community-driven learning.",
               icon: Icons.code_rounded,
             ),
             const SizedBox(height: 40),
@@ -60,7 +64,10 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSection({required String title, required String content, required IconData icon}) {
+  Widget _buildSection(
+      {required String title,
+      required String content,
+      required IconData icon}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -68,7 +75,7 @@ class AboutPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -83,9 +90,13 @@ class AboutPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.subHead1.copyWith(fontWeight: FontWeight.bold)),
+                Text(title,
+                    style: AppTypography.subHead1
+                        .copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text(content, style: AppTypography.body2.copyWith(color: Colors.grey[700], height: 1.5)),
+                Text(content,
+                    style: AppTypography.body2
+                        .copyWith(color: Colors.grey[700], height: 1.5)),
               ],
             ),
           ),

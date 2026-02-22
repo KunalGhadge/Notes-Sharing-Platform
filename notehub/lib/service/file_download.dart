@@ -4,6 +4,8 @@ import "package:dio/dio.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
 import "package:get/get.dart";
 import "package:notehub/controller/download_controller.dart";
+import "package:notehub/core/helper/hive_boxes.dart";
+import "package:notehub/model/document_model.dart";
 import "package:notehub/view/widgets/toasts.dart";
 import "package:open_file/open_file.dart";
 import "package:path_provider/path_provider.dart";
@@ -12,16 +14,21 @@ final dio = Dio();
 
 class FileDownload {
   static void download({
-    required String url,
-    required String name,
+    required DocumentModel document,
     FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin,
   }) async {
-    var downloadDir = await getDownloadsDirectory();
-    var downloadUri = Uri.parse(url);
+    if (document.document == null) {
+      Toasts.showTostError(message: "No document attached to this post");
+      return;
+    }
+    var downloadDir = await getApplicationDocumentsDirectory();
+    var downloadUri = Uri.parse(document.document!);
 
-    String savePath = "${downloadDir!.path}_$name";
+    String savePath =
+        "${downloadDir.path}/${document.documentName ?? 'document'}";
     if (await ifFileExists(savePath)) {
-      Toasts.showTostWarning(message: "Already downloaded: $name");
+      Toasts.showTostWarning(message: "Already downloaded: ${document.name}");
+      return;
     }
 
     var saveFile = File(savePath);
@@ -31,7 +38,7 @@ class FileDownload {
       saveFile.path,
       onReceiveProgress: (received, total) {
         Get.find<DownloadController>().downloadProgress.value =
-            received / total;
+            received / (total == -1 ? 1 : total);
         if (total != -1) {
           int progress = ((received / total) * 100).toInt();
           if (flutterLocalNotificationsPlugin != null) {
@@ -41,10 +48,14 @@ class FileDownload {
         }
       },
     );
+
+    // Save to Hive for tracking
+    await HiveBoxes.addDownload(document.toJson());
+
     if (flutterLocalNotificationsPlugin != null) {
       _showCompleteNotification(flutterLocalNotificationsPlugin, savePath);
     }
-    Toasts.showTostSuccess(message: "Downloaded: $name");
+    Toasts.showTostSuccess(message: "Downloaded: ${document.name}");
   }
 
   static Future<void> _showProgressNotification(int progress,

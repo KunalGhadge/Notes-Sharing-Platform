@@ -6,11 +6,14 @@ import 'package:notehub/view/profile_screen/profile.dart';
 import 'package:notehub/view/search_screen/search.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
 
+import 'package:notehub/view/official_screen/official_screen.dart';
+
 class BottomNavigationController extends GetxController {
   var currentPage = 0.obs;
 
   List<Widget> page = [
     const Home(),
+    const OfficialScreen(), // NEW: Official content
     SearchView(),
     const UploadScreen(),
     Profile(username: HiveBoxes.username),

@@ -27,6 +27,7 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(UserModelAdapter());
   await Hive.openBox<UserModel>("user");
+  await Hive.openBox("downloads");
   Get.put(BottomNavigationController());
   Get.put(ShowcaseController());
   Get.put(NotificationController());
