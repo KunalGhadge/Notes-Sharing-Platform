@@ -144,7 +144,7 @@ class DocumentCard extends StatelessWidget {
                                               horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: PrimaryColor.shade500
-                                                .withOpacity(0.1),
+                                                .withValues(alpha: 0.1),
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                             border: Border.all(
