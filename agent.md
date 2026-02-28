@@ -61,6 +61,8 @@ This document provides a comprehensive technical analysis of the Serious Study p
 
 ## 5. Development & QA
 - **Linting**: Strict compliance with `flutter_lints`. Run `flutter analyze` regularly.
+    - **Note on Deprecations**: The project uses modern Flutter conventions. Avoid `.withOpacity()`, use `.withValues(alpha: ...)` instead. Avoid `activeColor` in Switches, use `activeThumbColor`.
+    - **Formatting**: All flow control structures (if/else) must use curly braces. Empty catch blocks must contain a comment (e.g., `/* silent */`) to pass CI.
 - **Testing**: Basic unit and widget tests are located in the `test/` directory.
 
 ---
