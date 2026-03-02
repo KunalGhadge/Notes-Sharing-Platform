@@ -11,7 +11,14 @@ The application follows a serverless architecture with a Flutter frontend and a 
 
 ## 2. Technical Standards & Conventions
 
-### 2.1 State Management (GetX)
+### 2.1 Coding Conventions & Lints
+- **Flutter 3.24+**: Replace deprecated `.withOpacity(x)` with `.withValues(alpha: x)`.
+- **Switch Widgets**: Use `activeThumbColor` instead of deprecated `activeColor`.
+- **Flow Control**: All `if`, `for`, `while` statements must use curly braces `{}`.
+- **Error Handling**: Intentional empty catch blocks should include a comment like `/* silent */` or `/* ignored */`.
+- **Naming**: Use `lowerCamelCase` for variables and `UpperCamelCase` for classes/enums.
+
+### 2.2 State Management (GetX)
 - Use reactive state variables (`.obs`) in controllers.
 - Controllers should handle all business logic, keeping views focused on UI.
 - Use `Get.put()` for global controllers and GetX tags for concurrent states where necessary.
