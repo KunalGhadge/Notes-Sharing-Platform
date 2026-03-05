@@ -35,7 +35,7 @@ class CommentTile extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: comment.isAdmin
-                  ? const Color(0xFFFFD700).withValues(alpha: 0.05)
+                  ? const Color(0xFFFFD700).withOpacity(0.05)
                   : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: comment.isAdmin
