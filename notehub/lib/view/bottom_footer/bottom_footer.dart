@@ -93,7 +93,7 @@ class BottomFooter extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isSelected
-              ? PrimaryColor.shade500.withValues(alpha: 0.1)
+              ? PrimaryColor.shade500.withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
