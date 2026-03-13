@@ -156,6 +156,9 @@ class CommentController extends GetxController {
             ? 'replied to your comment'
             : 'commented on your note',
       });
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+      /* silent */
+    }
   }
 }
