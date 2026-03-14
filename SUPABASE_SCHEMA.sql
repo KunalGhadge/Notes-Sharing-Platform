@@ -167,3 +167,40 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.comments;
   END IF;
 END $$;
+
+-- 8. RPC Functions for Atomic Operations
+CREATE OR REPLACE FUNCTION increment_likes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = likes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_likes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = GREATEST(0, likes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION increment_dislikes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = dislikes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = GREATEST(0, dislikes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
