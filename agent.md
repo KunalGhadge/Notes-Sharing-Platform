@@ -5,7 +5,7 @@ Serious Study is a premium notes-sharing and academic networking platform specif
 ## 1. Technical Architecture
 
 ### Frontend (Flutter)
-- **Framework**: Flutter (SDK ^3.5.4).
+- **Framework**: Flutter (Dart SDK ^3.5.4). Compatible with Flutter 3.27+.
 - **State Management**: **GetX**. Used for reactive state updates, dependency injection, and clean navigation. Controllers (e.g., `DocumentController`, `AuthController`) decouple business logic from the UI.
 - **Local Storage**: **Hive**. A high-performance NoSQL database used for persistent local caching.
     - `user` box: Stores the `UserModel` for immediate access to profile data on app launch.
