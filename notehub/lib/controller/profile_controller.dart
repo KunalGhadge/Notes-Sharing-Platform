@@ -85,10 +85,10 @@ class ProfileController extends GetxController {
       }
 
       await supabase.from('profiles').update({
-        if (name != null) 'display_name': name,
-        if (institute != null) 'institute': institute,
-        if (interests != null) 'academic_interests': interests,
-      }).eq('id', userId);
+        'display_name': name,
+        'institute': institute,
+        'academic_interests': interests,
+      }..removeWhere((key, value) => value == null)).eq('id', userId);
 
       await fetchUserData(username: HiveBoxes.username);
       Toasts.showTostSuccess(message: "Profile updated successfully");
