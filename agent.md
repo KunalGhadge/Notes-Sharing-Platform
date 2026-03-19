@@ -6,7 +6,7 @@ This document provides a comprehensive analysis of the Serious Study project fro
 Serious Study is a premium academic community platform for Mumbai University students, enabling seamless note sharing, networking, and resource discovery. It is built using a Flutter frontend and a serverless Supabase backend.
 
 ## 2. Architecture & State Management
-- **Framework**: Flutter (SDK ^3.5.4)
+- **Framework**: Flutter (SDK ^3.41.2)
 - **State Management**: **GetX** is used for reactive state updates, dependency injection, and routing. Controllers (e.g., `DocumentController`, `AuthController`) decouple business logic from the UI.
 - **Local Persistence**: **Hive** provides high-performance NoSQL local storage.
     - `userBox`: Stores `UserModel` for session persistence and immediate profile loading.
