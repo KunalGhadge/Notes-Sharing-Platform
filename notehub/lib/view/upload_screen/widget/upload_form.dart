@@ -125,7 +125,7 @@ class UploadForm extends StatelessWidget {
           Switch(
             value: controller.isOfficial.value,
             onChanged: (v) => controller.isOfficial.value = v,
-            activeColor: const Color(0xFFB8860B),
+            activeThumbColor: const Color(0xFFB8860B),
           ),
         ],
       ),
