@@ -101,7 +101,7 @@ class UploadForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFD700).withOpacity(0.1),
+        color: const Color(0xFFFFD700).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFFD700), width: 1),
       ),

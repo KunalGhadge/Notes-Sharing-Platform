@@ -19,7 +19,7 @@ Serious Study is a premium notes-sharing and academic networking platform for th
 
 ## 2. Design & Architecture
 - **UI Paradigm**: The application implements **Material 3** with a **Glassmorphism** aesthetic.
-    - Semi-transparent overlays (e.g., `Colors.white.withOpacity(0.15)`) and custom gradients (`AppGradients.glassGradient`) are used to create a modern, layered look, especially in `PostCard` and `BottomFooter`.
+    - Semi-transparent overlays (e.g., `Colors.white.withValues(alpha: 0.15)`) and custom gradients (`AppGradients.glassGradient`) are used to create a modern, layered look, especially in `PostCard` and `BottomFooter`.
     - Rebranded with a "Premium Deep Blue" theme (`#0D47A1`) using `Plus Jakarta Sans` typography.
 - **Project Structure**:
     - `lib/controller/`: Reactive logic using GetX. Instances are often tagged (e.g., `ShowcaseController`) to manage multiple states (like different user profiles).
@@ -47,11 +47,11 @@ The migration from the legacy Django stack to Supabase has systematically addres
 - **Notifications**: `NotificationController` listens for new records in the `notifications` table. It supports both personal interactions (likes/comments) and global announcements broadcasted by admins. Local notifications are triggered using `flutter_local_notifications`.
 
 ## 5. Development & QA
-- **Prerequisites**: Flutter SDK ^3.5.4, Dart SDK ^3.11.0.
+- **Prerequisites**: Flutter 3.41.2 (channel stable), Dart SDK 3.11.0.
 - **Android Configuration**:
     - `compileSdk`: 36
     - `minSdkVersion`: 21 (Support for `multiDexEnabled` and `coreLibraryDesugaring`)
-    - `AGP`: 8.9.1, `Kotlin`: 2.1.0, `Gradle`: 8.10.2
+    - `AGP`: 8.9.1, `Kotlin`: 2.1.0, `Gradle`: 8.12
 - **Code Quality**:
     - The project follows a "Zero Warnings" policy for CI success.
     - Run `flutter analyze` to verify linting compliance.
