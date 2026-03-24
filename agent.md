@@ -44,12 +44,12 @@ The application follows a **GetX-based MVC (Model-View-Controller)** pattern for
 
 ## 5. Coding Conventions & Linting
 - **Zero Warnings Policy**: Strict adherence to a zero-warning/info linting policy for CI success.
-- **Modern Flutter APIs**: Use `.withValues(alpha: x)` instead of deprecated `.withOpacity(x)`.
+- **Modern Flutter APIs**: Use `.withValues(alpha: x)` instead of deprecated `.withOpacity(x)`. For Flutter 3.41.x+, use `activeThumbColor` in `Switch` widgets.
 - **Naming Conventions**: Follow lowerCamelCase for variables (e.g., `avatarUrl`) and PascalCase for classes.
 - **Code Quality**: Avoid `print()` statements; use `debugPrint()` or specialized logging. Ensure all flow control structures use curly braces and empty catch blocks are annotated with `// ignore: empty_catches`.
 
 ## 6. Development Workflow
-- **Environment**: Flutter SDK ^3.5.4, Dart SDK ^3.11.0.
+- **Environment**: Flutter SDK 3.41.2, Dart SDK 3.11.0.
 - **Android Configuration**: Requires `multiDexEnabled true` and `coreLibraryDesugaringEnabled true` (with `com.android.tools:desugar_jdk_libs:2.1.4`) to support the local notification plugin.
 - **Verification**: Run `flutter analyze && flutter test` in the `notehub/` directory before any commit.
 
