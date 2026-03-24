@@ -33,56 +33,28 @@ The app follows a decoupled architecture where the UI listens to **Controllers**
 - **`lib/main.dart`**:
     - Initializes the Supabase client using credentials from `AppMetaData`.
     - Configures global dependencies using `Get.put()`.
-    - **Code Block (Initialization)**:
-      ```dart
-      await Supabase.initialize(
-        url: AppMetaData.supabaseUrl,
-        anonKey: AppMetaData.supabaseAnonKey,
-      );
-      ```
+    - Initializes Hive for local storage and Local Notifications for real-time alerts.
 
 - **`lib/core/meta/app_meta.dart`**:
     - Centralized configuration for the app.
     - Contains branding strings and backend credentials.
-    - **Code Block**:
-      ```dart
-      class AppMetaData {
-        static String appName = "Serious Study";
-        static String supabaseUrl = "https://...";
-        static String supabaseAnonKey = "sb_publishable_...";
-      }
-      ```
 
 - **`lib/controller/document_controller.dart`**:
     - Manages the lifecycle of notes (fetching, liking, downloading).
     - Implements **Atomic Interactions**: Instead of client-side increments, it calls database functions to prevent race conditions.
-    - **Code Block (Interaction Logic)**:
-      ```dart
-      await _supabase.rpc('handle_interaction', params: {
-        'p_document_id': docId,
-        'p_user_id': userId,
-        'p_interaction_type': type, // 'like' or 'dislike'
-      });
-      ```
+    - Uses **Optimistic UI** for immediate feedback on likes and bookmarks.
 
 - **`lib/controller/upload_controller.dart`**:
     - Handles complex multi-part uploads (Cover Image + Document).
-    - Implements **Space Saving**: Files over 10MB are blocked, and images are compressed.
+    - Implements **Space Saving**: Files over 10MB are blocked, and images are compressed via `ImageHelper`.
     - Supports **External Links**: Users can share Google Drive or Mega links instead of direct files to save bandwidth.
 
 - **`lib/core/helper/image_helper.dart`**:
     - A utility for optimizing media assets.
-    - **Code Block (Compression)**:
-      ```dart
-      static Future<File?> compressImage(File file) async {
-        final filePath = file.absolute.path;
-        final lastIndex = filePath.lastIndexOf(RegExp(r'.png|.jp'));
-        final outPath = "${filePath.substring(0, (lastIndex))}..._compressed.jpg";
-        return await FlutterImageCompress.compressAndGetFile(
-          file.absolute.path, outPath, quality: 70,
-        );
-      }
-      ```
+    - **Compression Logic**: Reduces cover image quality to 70 and sets minimum dimensions to 1024 to balance quality and storage.
+
+- **`lib/service/file_caching.dart`**:
+    - Manages local file caching using `Dio` and `path_provider` to avoid redundant downloads of academic materials.
 
 ---
 
@@ -93,7 +65,8 @@ The database is structured to be relational and secure.
 - **`profiles` table**: Extends Supabase Auth metadata to include MU-specific info (Interests, University ID).
 - **`documents` table**: Stores metadata for notes. Includes `is_external` flag to distinguish between direct uploads and URLs.
 - **`interactions` table**: Tracks likes and dislikes uniquely per user.
-- **`notifications` table**: Powers the real-time activity feed.
+- **`notifications` table**: Powers the real-time activity feed, supporting both direct and global announcements.
+- **`remote_config` table**: Allows for dynamic app updates without requiring a full APK rebuild.
 
 ---
 
@@ -109,6 +82,7 @@ The database is structured to be relational and secure.
 1. **Thumbnail Caching**: Uses `CachedNetworkImage` to prevent re-downloading thumbnails.
 2. **Local Caching**: Hive stores the current user's profile, making the "My Profile" tab load instantly.
 3. **Lazy Fetching**: Documents are fetched in batches (50 at a time) to minimize initial payload.
+4. **Sticky Sort**: Official documents are automatically prioritized in the home feed.
 
 ---
 
@@ -128,9 +102,9 @@ The migration to Supabase has resolved several critical vulnerabilities identifi
 
 ## 7. Future Scalability
 The use of Supabase allows the app to scale to thousands of users without server management.
-- **Real-time Notifications**: Can be easily enabled via Postgres Changes.
+- **Real-time Notifications**: Enabled via Postgres Changes for instant feedback on interactions.
 - **Edge Functions**: Can be added for heavy processing (e.g., PDF text extraction) in the future.
 
 ---
 **Analyzed by: Jules (Divine Visionary Agent)**
-**Date: May 2024**
+**Date: October 2024**
