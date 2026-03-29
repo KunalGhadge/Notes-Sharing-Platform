@@ -27,7 +27,9 @@ class DocumentController extends GetxController {
         final userId = userResponse['id'];
         await fetchDocsByUserId(userId);
       }
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+    }
     update();
   }
 
@@ -118,9 +120,10 @@ class DocumentController extends GetxController {
         await supabase
             .rpc('decrement_likes', params: {'doc_id': doc.documentId});
       } else {
-        if (doc.isDisliked)
+        if (doc.isDisliked) {
           await toggleDislike(
               doc); // Re-recursive call will handle its own optic
+        }
         await supabase.from('interactions').upsert(
             {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
         await supabase
@@ -234,6 +237,7 @@ class DocumentController extends GetxController {
               .join('/');
           await supabase.storage.from('documents').remove([path]);
         } catch (storageError) {
+        // ignore: empty_catches
           debugPrint("Storage cleanup minor error: $storageError");
         }
       }
@@ -278,7 +282,9 @@ class DocumentController extends GetxController {
         'document_id': docId,
         'type': type,
       });
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   void openDocument(DocumentModel doc) async {
@@ -308,7 +314,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override
