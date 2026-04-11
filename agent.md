@@ -66,8 +66,8 @@ Serious Study follows a reactive, decoupled architecture centered around the **G
 ## 5. Development Guidelines
 
 ### Tech Stack Constraints
-- **Flutter SDK**: `^3.5.4`
-- **Dart SDK**: `^3.11.0`
+- **Flutter SDK**: `3.41.x` (Stable)
+- **Dart SDK**: `^3.5.4` (Constraint) / `3.11.0` (Current)
 - **Android**: `compileSdk 36`, `Java 17`, `multiDexEnabled true`.
 
 ### Coding Conventions
