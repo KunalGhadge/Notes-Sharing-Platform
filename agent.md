@@ -7,22 +7,27 @@ Serious Study is a premium notes-sharing and academic networking platform for th
 
 ## 1. Performance Analysis
 - **Reactive State Management**: Utilizing `GetX` for efficient state updates. Controllers (e.g., `DocumentController`, `ProfileController`) manage business logic independently from the UI.
-- **Local Persistent Storage**: `Hive` is used for high-performance NoSQL local caching. User profile metadata is stored in `userBox` (see `lib/core/helper/hive_boxes.dart`) to ensure immediate UI responsiveness upon app launch.
+- **Local Persistent Storage**: `Hive` is used for high-performance NoSQL local caching.
+    - `userBox`: Stores `UserModel` (id, username, profileUrl) for instant session restoration.
+    - `downloadsBox`: Manages metadata for offline-accessible documents.
 - **Media Optimization**:
     - **Caching**: `cached_network_image` is used throughout the app (e.g., in `HomeHeader`) to minimize network usage.
-    - **Compression**: `flutter_image_compress` is integrated into the upload pipeline to optimize asset sizes before they reach Supabase Storage.
-- **Database Scalability**:
-    - **Atomic Operations**: Critical interactions like `increment_likes` and `decrement_dislikes` are handled via PostgreSQL Functions (`RPCs`) defined in `SUPABASE_SCHEMA.sql`. This ensures data consistency and prevents race conditions.
+    - **Compression**: `flutter_image_compress` is integrated into the upload pipeline (`ImageHelper.compressImage`) using **quality 70** and **1024px** min dimensions to optimize bandwidth.
+    - **Upload Constraints**: `UploadController` enforces a **10MB limit** for direct document uploads to ensure cloud storage efficiency.
+- **Data Flow & Scalability**:
+    - **Atomic Operations**: Critical interactions like `increment_likes` and `decrement_dislikes` are handled via PostgreSQL Functions (`RPCs`) defined in `SUPABASE_SCHEMA.sql` using `SECURITY DEFINER`.
+    - **Sticky Sort**: `HomeController` implements a custom sort that prioritizes `is_official` documents followed by chronological order, ensuring critical university updates remain visible.
     - **Perceived Performance**: Shimmer placeholders are implemented in sections like `HomeDocumentSection` to provide smooth visual feedback during asynchronous data fetching.
 
 ## 2. Design & Architecture
 - **UI Paradigm**: The application implements **Material 3** with a **Glassmorphism** aesthetic.
-    - Semi-transparent overlays (e.g., `Colors.white.withValues(alpha: 0.15)`) and custom gradients (`AppGradients.premiumGradient`) are used to create a modern, layered look.
-    - Rebranded with a "Premium Deep Blue" theme (`#0D47A1`).
+    - **Glassmorphism**: Utilizes the `glassmorphism` package and `AppGradients.glassGradient` for semi-transparent, layered UI elements (e.g., `PostCard`).
+    - **Color Palette**: Rebranded with a "Premium Deep Blue" theme (`#0D47A1`) as the primary brand color.
+    - **Standardized Components**: Uses a unified `Loader` and `Loader2` for loading states to maintain visual consistency.
 - **Project Structure**:
-    - `lib/controller/`: Reactive logic using GetX.
-    - `lib/view/`: Modular UI components and screens.
-    - `lib/core/`: Centralized configurations like `AppMetaData` and theme definitions.
+    - `lib/controller/`: Reactive logic using GetX (e.g., `AuthController`, `DocumentController`).
+    - `lib/view/`: Modular UI components organized by feature (Auth, Home, Profile).
+    - `lib/core/`: Centralized configurations (`AppMetaData`) and theme definitions (`AppGradients`, `PrimaryColor`).
 - **Asset Integration**: High-quality vector graphics (`flutter_svg`) and `Lottie` animations are used for state feedback (e.g., empty search results).
 
 ## 3. Security Analysis & Migration Audit
@@ -30,11 +35,12 @@ The current analysis confirms that the critical security vulnerabilities present
 
 - **Authentication**: Migrated from a custom session-less system to **Supabase Auth (JWT)**. Sessions are securely managed by the Supabase SDK.
 - **Password Security**: Passwords are no longer handled in plain text; they are managed by Supabase using industry-standard hashing (Argon2/Bcrypt).
-- **Authorization (RLS)**: **Row Level Security** is strictly enforced. Every table in `SUPABASE_SCHEMA.sql` has policies ensuring:
-    - **Profiles**: Only owners can `UPDATE`.
-    - **Documents**: Only owners can `INSERT` or `DELETE`.
-    - **Notifications/Bookmarks**: Private to the specific user.
-- **API Integrity**: By using `SECURITY DEFINER` on PostgreSQL functions, the app allows atomic updates to counters (like `likes_count`) while keeping the underlying table data protected from direct unauthorized manipulation.
+- **Authorization (RLS)**: **Row Level Security** is strictly enforced in `SUPABASE_SCHEMA.sql`. Policies ensure:
+    - **Profiles**: Publicly viewable (`SELECT`), but restricted `INSERT`/`UPDATE` to the owner (`auth.uid() = id`).
+    - **Documents**: Publicly viewable, but only owners can `INSERT`, `UPDATE`, or `DELETE`.
+    - **Interactions & Bookmarks**: Users can only manage their own entries.
+    - **Notifications**: Strictly private; users can only `SELECT` where `receiver_id = auth.uid()`.
+- **API Integrity**: Atomic updates to counters (like `likes_count`) are performed via PostgreSQL RPCs defined with `SECURITY DEFINER`. This allows the application to increment protected columns without granting users direct write access to the table, preventing data tampering.
 - **Secure File Access**: All documents and thumbnails in Supabase Storage are governed by policies, preventing unauthorized public access to private assets.
 
 ## 4. Development & QA
