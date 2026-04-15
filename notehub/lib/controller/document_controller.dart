@@ -27,7 +27,9 @@ class DocumentController extends GetxController {
         final userId = userResponse['id'];
         await fetchDocsByUserId(userId);
       }
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+    }
     update();
   }
 
@@ -311,7 +313,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override
