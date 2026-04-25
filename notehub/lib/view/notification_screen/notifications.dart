@@ -28,8 +28,9 @@ class NotificationView extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value)
+        if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
+        }
         if (controller.notifications.isEmpty) {
           return Center(
             child: Column(
@@ -51,7 +52,7 @@ class NotificationView extends StatelessWidget {
             return Container(
               color: notification.isRead
                   ? Colors.transparent
-                  : PrimaryColor.shade100.withOpacity(0.1),
+                  : PrimaryColor.shade100.withValues(alpha: 0.1),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(notification.senderProfile ==
