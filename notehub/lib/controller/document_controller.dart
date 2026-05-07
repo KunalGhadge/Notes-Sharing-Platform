@@ -99,7 +99,9 @@ class DocumentController extends GetxController {
 
   Future<void> toggleLike(DocumentModel doc) async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
 
     // Optimistic Update
     final wasLiked = doc.isLiked;
@@ -118,9 +120,10 @@ class DocumentController extends GetxController {
         await supabase
             .rpc('decrement_likes', params: {'doc_id': doc.documentId});
       } else {
-        if (doc.isDisliked)
+        if (doc.isDisliked) {
           await toggleDislike(
               doc); // Re-recursive call will handle its own optic
+        }
         await supabase.from('interactions').upsert(
             {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
         await supabase
@@ -143,7 +146,9 @@ class DocumentController extends GetxController {
 
   Future<void> toggleDislike(DocumentModel doc) async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
 
     // Optimistic Update
     final wasDisliked = doc.isDisliked;
@@ -308,7 +313,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override

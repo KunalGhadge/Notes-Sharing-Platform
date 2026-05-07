@@ -18,7 +18,9 @@ class ImageHelper {
       format: CompressFormat.jpeg,
     );
 
-    if (result == null) return null;
+    if (result == null) {
+      return null;
+    }
     return File(result.path);
   }
 }

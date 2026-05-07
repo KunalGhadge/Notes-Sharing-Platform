@@ -53,8 +53,12 @@ class HomeController extends GetxController {
       final mapped = _mapDocuments(response as List);
       // Sticky Sort: is_official DESC, created_at DESC
       mapped.sort((a, b) {
-        if (a.isOfficial && !b.isOfficial) return -1;
-        if (!a.isOfficial && b.isOfficial) return 1;
+        if (a.isOfficial && !b.isOfficial) {
+          return -1;
+        }
+        if (!a.isOfficial && b.isOfficial) {
+          return 1;
+        }
         return b.dateOfUpload.compareTo(a.dateOfUpload);
       });
       updates.value = mapped;

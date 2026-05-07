@@ -20,7 +20,9 @@ class ShowcaseController extends GetxController {
           .ilike('username', username)
           .maybeSingle();
 
-      if (userResponse == null) return;
+      if (userResponse == null) {
+        return;
+      }
       final userId = userResponse['id'];
 
       final response = await supabase.from('documents').select('''
@@ -49,7 +51,9 @@ class ShowcaseController extends GetxController {
           .ilike('username', username)
           .maybeSingle();
 
-      if (userResponse == null) return;
+      if (userResponse == null) {
+        return;
+      }
       final userId = userResponse['id'];
 
       final bookmarkResponse = await supabase

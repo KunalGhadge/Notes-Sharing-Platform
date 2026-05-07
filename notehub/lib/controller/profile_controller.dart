@@ -24,7 +24,9 @@ class ProfileController extends GetxController {
           .eq('username', username)
           .maybeSingle();
 
-      if (profileData == null) return;
+      if (profileData == null) {
+        return;
+      }
 
       final userId = profileData['id'];
 
