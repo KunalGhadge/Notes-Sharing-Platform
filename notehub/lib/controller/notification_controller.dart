@@ -46,7 +46,9 @@ class NotificationController extends GetxController {
 
   void listenToNotifications() {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
 
     _channel = supabase
         .channel('public:notifications')
@@ -89,7 +91,9 @@ class NotificationController extends GetxController {
     isLoading.value = true;
     try {
       final userId = HiveBoxes.userId;
-      if (userId.isEmpty) return;
+      if (userId.isEmpty) {
+        return;
+      }
 
       final response = await supabase
           .from('notifications')
@@ -122,7 +126,9 @@ class NotificationController extends GetxController {
 
   Future<void> markAsRead() async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
     await supabase
         .from('notifications')
         .update({'is_read': true}).eq('receiver_id', userId);

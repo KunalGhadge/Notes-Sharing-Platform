@@ -60,7 +60,9 @@ class CommentController extends GetxController {
 
   Future<void> postComment(String docId, String content,
       {String? parentId}) async {
-    if (content.trim().isEmpty) return;
+    if (content.trim().isEmpty) {
+      return;
+    }
     final userId = HiveBoxes.userId;
     if (userId.isEmpty) {
       Toasts.showTostError(message: "Please log in to comment.");
@@ -142,10 +144,14 @@ class CommentController extends GetxController {
           .select('user_id')
           .eq('id', docId)
           .maybeSingle();
-      if (docData == null) return;
+      if (docData == null) {
+        return;
+      }
 
       final receiverId = docData['user_id'];
-      if (senderId == receiverId) return;
+      if (senderId == receiverId) {
+        return;
+      }
 
       await supabase.from('notifications').insert({
         'sender_id': senderId,

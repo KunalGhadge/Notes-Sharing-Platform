@@ -34,7 +34,9 @@ class SearchView extends StatelessWidget {
           _buildFilterChips(),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value) return const Center(child: CircularProgressIndicator());
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
               if (controller.results.isEmpty) {
                 return Center(
                   child: Column(

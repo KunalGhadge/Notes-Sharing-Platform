@@ -28,7 +28,9 @@ class ProfileUserController extends GetxController {
           .eq('username', username)
           .maybeSingle();
 
-      if (profileResponse == null) return;
+      if (profileResponse == null) {
+        return;
+      }
 
       final userId = profileResponse['id'];
       final currentUserId = HiveBoxes.userId;
@@ -83,7 +85,9 @@ class ProfileUserController extends GetxController {
       }
       final targetUserId = profileData.value.id;
 
-      if (targetUserId == null) return false;
+      if (targetUserId == null) {
+        return false;
+      }
 
       if (profileData.value.isFollowedByUser) {
         await supabase

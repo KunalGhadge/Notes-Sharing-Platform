@@ -1,4 +1,4 @@
-  qaWSQAimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:notehub/core/helper/hive_boxes.dart';
@@ -37,7 +37,9 @@ class AuthController extends GetxController {
   }
 
   Future<void> loginWithEmail() async {
-    if (!verifyForm()) return;
+    if (!verifyForm()) {
+      return;
+    }
 
     isLoading.value = true;
     try {
@@ -66,7 +68,9 @@ class AuthController extends GetxController {
   }
 
   Future<void> registerWithEmail() async {
-    if (!verifyForm(isRegister: true)) return;
+    if (!verifyForm(isRegister: true)) {
+      return;
+    }
 
     isLoading.value = true;
     try {
@@ -122,7 +126,9 @@ class AuthController extends GetxController {
           .maybeSingle();
 
       if (profileData == null) {
-        if (retryCount > 1) throw Exception("Profile creation failed");
+        if (retryCount > 1) {
+          throw Exception("Profile creation failed");
+        }
 
         // Create profile from metadata if it doesn't exist
         final metadata = user.userMetadata ?? {};
