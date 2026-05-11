@@ -315,7 +315,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override
