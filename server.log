@@ -1,0 +1,12 @@
+127.0.0.1 - - [13/May/2026 10:44:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:52] "GET /flutter_bootstrap.js HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:53] "GET /main.dart.js HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/FontManifest.json HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/fonts/MaterialIcons-Regular.otf HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/packages/cupertino_icons/assets/CupertinoIcons.ttf HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/packages/iconsax_flutter/fonts/FlutterIconsax.ttf HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/AssetManifest.bin.json HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:54] "GET /assets/assets/animations/notes.json HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:57] "GET /assets/assets/icons/log-in.svg HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:57] "GET /assets/assets/icons/mail.svg HTTP/1.1" 200 -
+127.0.0.1 - - [13/May/2026 10:44:57] "GET /assets/assets/icons/lock.svg HTTP/1.1" 200 -
