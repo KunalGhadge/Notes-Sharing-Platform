@@ -28,7 +28,7 @@ class DocumentController extends GetxController {
         await fetchDocsByUserId(userId);
       }
     } catch (e) {
-      // ignore: empty_catches
+      debugPrint("Fetch docs error: $e");
     }
     update();
   }
@@ -282,7 +282,7 @@ class DocumentController extends GetxController {
         'type': type,
       });
     } catch (e) {
-      // ignore: empty_catches
+      debugPrint("Silent notification error: $e");
     }
   }
 
@@ -313,7 +313,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override
