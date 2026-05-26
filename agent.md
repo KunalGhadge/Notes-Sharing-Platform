@@ -48,6 +48,7 @@ The migration to Supabase has established a robust, enterprise-grade security fr
 - **Validation**: `UploadController` enforces a strict **10MB file size limit** for direct document uploads to control infrastructure costs and ensure performance.
 
 ## 6. Infrastructure & DevOps
+- **Environment**: Flutter 3.41.2 / Dart 3.11.0 (Feb 2026 Stable).
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions).
 - **CI/CD**: The project maintains a "Zero Warnings" policy, verified via `flutter analyze` and `flutter test` in automated pipelines.
 - **Remote Config**: The `RemoteConfigController` utilizes a `remote_config` table in Supabase for dynamic app updates and maintenance flags without requiring APK rebuilds.
@@ -55,7 +56,9 @@ The migration to Supabase has established a robust, enterprise-grade security fr
 
 ## 7. Developer Guidelines
 - **Zero Warnings Policy**: All code must pass `flutter analyze` with no warnings.
-- **Modern APIs**: Use `.withValues(alpha: ...)` instead of deprecated `.withOpacity()`.
+- **Modern APIs**:
+  - Use `.withValues(alpha: ...)` instead of deprecated `.withOpacity()`.
+  - Use `activeThumbColor` in `Switch` widgets instead of deprecated `activeColor`.
 - **Linting**: Adhere to `flutter_lints` and specific rules like `curly_braces_in_flow_control_structures`.
 - **Atomic Operations**: Always use RPCs for data mutations that involve counters or multi-table updates.
 
