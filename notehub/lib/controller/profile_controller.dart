@@ -60,7 +60,9 @@ class ProfileController extends GetxController {
       if (username == HiveBoxes.username) {
         await HiveBoxes.setUser(user.value);
       }
-    } catch (e) {/* silent */} finally {
+    } catch (e) {
+      // ignore: empty_catches
+    } finally {
       isLoading.value = false;
     }
   }
