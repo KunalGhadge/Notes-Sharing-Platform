@@ -68,7 +68,9 @@ class ProfileUserController extends GetxController {
         documents: docsRes.count,
         isFollowedByUser: isFollowed,
       );
-    } catch (error) { /* silent */ } finally {
+    } catch (e) {
+      // ignore: empty_catches
+    } finally {
       isLoading.value = false;
     }
   }
