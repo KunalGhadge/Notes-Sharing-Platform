@@ -28,8 +28,9 @@ class NotificationView extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value)
+        if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
+        }
         if (controller.notifications.isEmpty) {
           return Center(
             child: Column(
