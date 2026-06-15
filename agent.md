@@ -1,48 +1,50 @@
 # Developer Guide - Serious Study (formerly NoteHub)
 
-This document provides a comprehensive analysis of the Serious Study project from a developer's perspective. It documents the current state of the application after its migration from a legacy Django/MongoDB stack to a serverless **Supabase** architecture.
+This document provides a comprehensive analysis of the Serious Study project from a developer's perspective. It documents the architecture, performance, design, and security of the application.
 
 ## Project Overview
-Serious Study is a premium notes-sharing and academic networking platform for the Mumbai University student community. It features a Flutter frontend and a Supabase (PostgreSQL) backend.
+Serious Study is a premium notes-sharing and academic networking platform for the Mumbai University student community. It utilizes a Flutter frontend and a Supabase (PostgreSQL) serverless backend.
 
 ## 1. Performance Analysis
-- **Reactive State Management**: Utilizing `GetX` for efficient state updates. Controllers (e.g., `DocumentController`, `ProfileController`) manage business logic independently from the UI.
-- **Local Persistent Storage**: `Hive` is used for high-performance NoSQL local caching. User profile metadata is stored in `userBox` (see `lib/core/helper/hive_boxes.dart`) to ensure immediate UI responsiveness upon app launch.
+- **Reactive State Management**: The app uses `GetX` for efficient state management and dependency injection. Controllers handle business logic, ensuring a clean separation of concerns.
+- **Local Persistent Storage**: `Hive` provides high-performance local NoSQL storage. It is used to cache user profile data (`userBox`) for instant app launches and to manage `downloadsBox` for offline access.
 - **Media Optimization**:
-    - **Caching**: `cached_network_image` is used throughout the app (e.g., in `HomeHeader`) to minimize network usage.
-    - **Compression**: `flutter_image_compress` is integrated into the upload pipeline to optimize asset sizes before they reach Supabase Storage.
-- **Database Scalability**:
-    - **Atomic Operations**: Critical interactions like `increment_likes` and `decrement_dislikes` are handled via PostgreSQL Functions (`RPCs`) defined in `SUPABASE_SCHEMA.sql`. This ensures data consistency and prevents race conditions.
-    - **Perceived Performance**: Shimmer placeholders are implemented in sections like `HomeDocumentSection` to provide smooth visual feedback during asynchronous data fetching.
+    - **Caching**: `cached_network_image` is used throughout the UI to minimize redundant network requests and improve scroll performance.
+    - **Compression**: The `UploadController` integrates `ImageHelper` to compress cover images before uploading to Supabase Storage, significantly reducing bandwidth consumption.
+    - **File Limits**: A strict 10MB limit is enforced for direct document uploads to ensure platform stability. Users are encouraged to use external links (Google Drive/Mega) for larger files.
+- **Database Efficiency**:
+    - **Sticky Sort**: The `HomeController` implements a custom sorting algorithm that prioritizes "Official" documents at the top of the feed while maintaining chronological order for community posts.
+    - **Batch Fetching**: Feed updates are limited to 50 items per request to balance responsiveness and data usage.
+    - **Atomic Operations**: Critical interactions (likes, dislikes) utilize PostgreSQL RPCs to ensure data integrity and prevent race conditions.
+    - **Optimistic UI**: `DocumentController` updates the UI immediately upon user interaction (like/bookmark) before synchronizing with the backend, providing a snappy user experience.
 
 ## 2. Design & Architecture
 - **UI Paradigm**: The application implements **Material 3** with a **Glassmorphism** aesthetic.
-    - Semi-transparent overlays (e.g., `Colors.white.withValues(alpha: 0.15)`) and custom gradients (`AppGradients.premiumGradient`) are used to create a modern, layered look.
-    - Rebranded with a "Premium Deep Blue" theme (`#0D47A1`).
+    - Rebranded to a "Premium Deep Blue" theme (`#0D47A1`).
+    - Semi-transparent glass effects are used on the custom `BottomFooter` and various card components.
 - **Project Structure**:
-    - `lib/controller/`: Reactive logic using GetX.
-    - `lib/view/`: Modular UI components and screens.
-    - `lib/core/`: Centralized configurations like `AppMetaData` and theme definitions.
-- **Asset Integration**: High-quality vector graphics (`flutter_svg`) and `Lottie` animations are used for state feedback (e.g., empty search results).
+    - `lib/controller/`: Reactive business logic using GetX.
+    - `lib/view/`: Modular UI components and screens, including specialized widgets for comments and search.
+    - `lib/core/`: Centralized configurations:
+        - `config/`: Theme colors and typography using Google Fonts (Plus Jakarta Sans).
+        - `helper/`: Utility classes for Hive, image processing, and file handling.
+        - `meta/`: App-wide metadata and Supabase credentials.
+- **Zero Warnings Policy**: The project adheres to a strict "Zero Warnings" linting policy. Recent modernizations include replacing deprecated `.withOpacity()` with `.withValues(alpha: ...)` and updating `Switch` components to use `activeThumbColor`.
 
-## 3. Security Analysis & Migration Audit
-The current analysis confirms that the critical security vulnerabilities present in the legacy Django stack have been systematically addressed:
-
-- **Authentication**: Migrated from a custom session-less system to **Supabase Auth (JWT)**. Sessions are securely managed by the Supabase SDK.
-- **Password Security**: Passwords are no longer handled in plain text; they are managed by Supabase using industry-standard hashing (Argon2/Bcrypt).
-- **Authorization (RLS)**: **Row Level Security** is strictly enforced. Every table in `SUPABASE_SCHEMA.sql` has policies ensuring:
-    - **Profiles**: Only owners can `UPDATE`.
-    - **Documents**: Only owners can `INSERT` or `DELETE`.
+## 3. Security Analysis
+- **Authentication**: Secured by **Supabase Auth (JWT)**. Sessions are managed via the SDK, and user passwords are hashed using industry-standard algorithms (Argon2/Bcrypt) by Supabase.
+- **Authorization (RLS)**: **Row Level Security** is strictly enforced on all PostgreSQL tables.
+    - **Profiles**: Publicly viewable, but only the owner can update.
+    - **Documents**: Publicly viewable; only the owner can insert, update, or delete.
     - **Notifications/Bookmarks**: Private to the specific user.
-- **API Integrity**: By using `SECURITY DEFINER` on PostgreSQL functions, the app allows atomic updates to counters (like `likes_count`) while keeping the underlying table data protected from direct unauthorized manipulation.
-- **Secure File Access**: All documents and thumbnails in Supabase Storage are governed by policies, preventing unauthorized public access to private assets.
+- **Atomic Interaction Logic**: Interactions like `likes_count` are updated via `SECURITY DEFINER` RPC functions, preventing users from directly manipulating counter values in the `documents` table.
+- **Storage Security**: Supabase Storage policies ensure that only authenticated users can upload documents and that file paths follow a `userId/` convention for organized access control.
 
-## 4. Development & QA
-- **Prerequisites**: Flutter SDK ^3.5.4.
-- **Android Configuration**: The `build.gradle` is configured with `multiDexEnabled` and `coreLibraryDesugaring` to support the `flutter_local_notifications` plugin.
-- **Code Quality**:
-    - Run `flutter analyze` to verify linting compliance.
-    - Run `flutter test` to execute the test suite (e.g., `test/dummy_test.dart`).
+## 4. Maintenance & QA
+- **Environment**: Flutter SDK ^3.41.2, Dart SDK ^3.11.0.
+- **Static Analysis**: Always run `flutter analyze` in the `notehub/` directory before committing changes to maintain the 'Zero Warnings' status.
+- **Testing**: Functional integrity can be verified by running `flutter test`.
+- **UI Verification**: For visual changes, utilize the `flutter run -d web-server --web-port 8080` command combined with Playwright verification scripts where applicable.
 
 ---
-*Analyzed and Documented by Jules, AI Software Engineer.*
+*Last Updated: June 2026 by Jules, Divine Visionary AI Engineer.*
