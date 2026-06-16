@@ -65,6 +65,28 @@ CREATE TABLE IF NOT EXISTS public.remote_config (
 -- RLS Update (Kunal's ID for bootstrapping admin if needed)
 -- UPDATE public.profiles SET is_admin = true WHERE id = 'e243c8c6-4374-4902-9f46-fe992ce9bc87';
 
+-- 8. Security Triggers for Administrative Controls
+-- Restrict 'is_official' flag to admins only
+CREATE OR REPLACE FUNCTION public.check_official_permission()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.is_official = true THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND is_admin = true
+    ) THEN
+      RAISE EXCEPTION 'Only administrators can mark content as official.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS ensure_official_permission ON public.documents;
+CREATE TRIGGER ensure_official_permission
+  BEFORE INSERT OR UPDATE OF is_official ON public.documents
+  FOR EACH ROW EXECUTE FUNCTION public.check_official_permission();
+
 -- Correct RLS for Admin actions
 DROP POLICY IF EXISTS "Admins can update documents" ON public.documents;
 CREATE POLICY "Admins can update documents" ON public.documents 
