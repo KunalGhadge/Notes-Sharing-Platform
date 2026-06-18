@@ -57,7 +57,7 @@ class _SplashState extends State<Splash> {
             Text(
               "Mumbai University Student Community",
               style: AppTypography.subHead1.copyWith(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ],
