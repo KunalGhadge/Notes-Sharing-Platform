@@ -27,7 +27,9 @@ class DocumentController extends GetxController {
         final userId = userResponse['id'];
         await fetchDocsByUserId(userId);
       }
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+    }
     update();
   }
 
@@ -118,9 +120,10 @@ class DocumentController extends GetxController {
         await supabase
             .rpc('decrement_likes', params: {'doc_id': doc.documentId});
       } else {
-        if (doc.isDisliked)
+        if (doc.isDisliked) {
           await toggleDislike(
               doc); // Re-recursive call will handle its own optic
+        }
         await supabase.from('interactions').upsert(
             {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
         await supabase
@@ -266,11 +269,15 @@ class DocumentController extends GetxController {
           .select('user_id')
           .eq('id', docId)
           .maybeSingle();
-      if (docData == null) return;
+      if (docData == null) {
+        return;
+      }
 
       final receiverId = docData['user_id'];
       final senderId = HiveBoxes.userId;
-      if (receiverId == senderId) return;
+      if (receiverId == senderId) {
+        return;
+      }
 
       await supabase.from('notifications').insert({
         'receiver_id': receiverId,
@@ -278,7 +285,9 @@ class DocumentController extends GetxController {
         'document_id': docId,
         'type': type,
       });
-    } catch (e) {/* silent */}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   void openDocument(DocumentModel doc) async {
@@ -308,7 +317,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore: empty_catches
+    }
   }
 
   @override
