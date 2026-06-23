@@ -1,48 +1,53 @@
-# Developer Guide - Serious Study (formerly NoteHub)
+# Technical Manual & Agent Guide - Serious Study
 
-This document provides a comprehensive analysis of the Serious Study project from a developer's perspective. It documents the current state of the application after its migration from a legacy Django/MongoDB stack to a serverless **Supabase** architecture.
+This document serves as the primary system manual for the Serious Study repository, providing a deep-dive technical analysis from a developer's perspective.
 
-## Project Overview
-Serious Study is a premium notes-sharing and academic networking platform for the Mumbai University student community. It features a Flutter frontend and a Supabase (PostgreSQL) backend.
+## 1. Project Architecture & Stack
+Serious Study is a premium academic networking platform for Mumbai University, utilizing a serverless architecture.
 
-## 1. Performance Analysis
-- **Reactive State Management**: Utilizing `GetX` for efficient state updates. Controllers (e.g., `DocumentController`, `ProfileController`) manage business logic independently from the UI.
-- **Local Persistent Storage**: `Hive` is used for high-performance NoSQL local caching. User profile metadata is stored in `userBox` (see `lib/core/helper/hive_boxes.dart`) to ensure immediate UI responsiveness upon app launch.
-- **Media Optimization**:
-    - **Caching**: `cached_network_image` is used throughout the app (e.g., in `HomeHeader`) to minimize network usage.
-    - **Compression**: `flutter_image_compress` is integrated into the upload pipeline to optimize asset sizes before they reach Supabase Storage.
-- **Database Scalability**:
-    - **Atomic Operations**: Critical interactions like `increment_likes` and `decrement_dislikes` are handled via PostgreSQL Functions (`RPCs`) defined in `SUPABASE_SCHEMA.sql`. This ensures data consistency and prevents race conditions.
-    - **Perceived Performance**: Shimmer placeholders are implemented in sections like `HomeDocumentSection` to provide smooth visual feedback during asynchronous data fetching.
+- **Frontend**: Flutter 3.5.4 (Dart 3.5.0+)
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **State Management**: GetX (Reactive pattern)
+- **Local Persistence**: Hive (NoSQL)
+- **Primary Brand Color**: Premium Deep Blue (`#0D47A1`)
 
-## 2. Design & Architecture
-- **UI Paradigm**: The application implements **Material 3** with a **Glassmorphism** aesthetic.
-    - Semi-transparent overlays (e.g., `Colors.white.withValues(alpha: 0.15)`) and custom gradients (`AppGradients.premiumGradient`) are used to create a modern, layered look.
-    - Rebranded with a "Premium Deep Blue" theme (`#0D47A1`).
-- **Project Structure**:
-    - `lib/controller/`: Reactive logic using GetX.
-    - `lib/view/`: Modular UI components and screens.
-    - `lib/core/`: Centralized configurations like `AppMetaData` and theme definitions.
-- **Asset Integration**: High-quality vector graphics (`flutter_svg`) and `Lottie` animations are used for state feedback (e.g., empty search results).
+## 2. Performance Analysis
+- **Reactive State Management**: `GetX` is used to decouple business logic from UI. Controllers (e.g., `DocumentController`, `HomeController`) manage state reactively using `.obs` and `Obx`.
+- **Local Caching**:
+    - `Hive` manages high-performance local storage.
+    - `userBox` stores `UserModel` data (id, username, profileUrl) for instant profile loading.
+    - `downloadsBox` tracks locally cached documents.
+- **Optimistic UI Updates**: Interactions such as likes, dislikes, and bookmarks in `DocumentController` use optimistic updates to provide immediate user feedback before backend synchronization.
+- **Atomic Operations**: Counter updates (`likes_count`, `dislikes_count`) are handled via Supabase RPCs (`increment_likes`, `decrement_likes`, etc.) to ensure consistency and prevent race conditions.
+- **Feed Optimization**: `HomeController` fetches updates in batches (limit 50) and implements a "Sticky Sort" algorithm that prioritizes official documents while maintaining chronological order.
 
-## 3. Security Analysis & Migration Audit
-The current analysis confirms that the critical security vulnerabilities present in the legacy Django stack have been systematically addressed:
+## 3. Design & UX Aesthetic
+- **UI Paradigm**: Material 3 with a **Glassmorphism** overlay aesthetic.
+- **Glassmorphism**: Implemented using the `glassmorphism` package and custom gradients (`AppGradients.glassGradient`) for components like `BottomFooter` and `PostCard`.
+- **Typography**: "Plus Jakarta Sans" is the primary typeface, providing a modern academic feel.
+- **Visual Feedback**:
+    - `shimmer` placeholders for loading states.
+    - `lottie` animations for empty states and success feedback.
+    - `liquid_pull_to_refresh` for an organic feel during feed updates.
 
-- **Authentication**: Migrated from a custom session-less system to **Supabase Auth (JWT)**. Sessions are securely managed by the Supabase SDK.
-- **Password Security**: Passwords are no longer handled in plain text; they are managed by Supabase using industry-standard hashing (Argon2/Bcrypt).
-- **Authorization (RLS)**: **Row Level Security** is strictly enforced. Every table in `SUPABASE_SCHEMA.sql` has policies ensuring:
-    - **Profiles**: Only owners can `UPDATE`.
-    - **Documents**: Only owners can `INSERT` or `DELETE`.
-    - **Notifications/Bookmarks**: Private to the specific user.
-- **API Integrity**: By using `SECURITY DEFINER` on PostgreSQL functions, the app allows atomic updates to counters (like `likes_count`) while keeping the underlying table data protected from direct unauthorized manipulation.
-- **Secure File Access**: All documents and thumbnails in Supabase Storage are governed by policies, preventing unauthorized public access to private assets.
+## 4. Security & Data Integrity
+- **Authentication**: Managed via Supabase Auth (JWT). User sessions are verified before sensitive operations (e.g., `UploadController.uploadDocument`).
+- **Authorization (RLS)**: Row Level Security is strictly enforced in `SUPABASE_SCHEMA.sql`:
+    - **Profiles**: Authenticated users can only update their own records.
+    - **Documents**: Owners have full CRUD permissions; others have read-only access.
+    - **Official Content**: The `ensure_official_permission` trigger restricts the `is_official` flag to users with `is_admin = true`.
+- **Security Definer**: PostgreSQL functions use `SECURITY DEFINER` with explicit `search_path = public` to prevent search-path hijacking while allowing controlled atomic updates.
 
-## 4. Development & QA
-- **Prerequisites**: Flutter SDK ^3.5.4.
-- **Android Configuration**: The `build.gradle` is configured with `multiDexEnabled` and `coreLibraryDesugaring` to support the `flutter_local_notifications` plugin.
-- **Code Quality**:
-    - Run `flutter analyze` to verify linting compliance.
-    - Run `flutter test` to execute the test suite (e.g., `test/dummy_test.dart`).
+## 5. Maintenance & QA
+- **Zero Warnings Policy**: The codebase strictly adheres to a zero-warning linting standard.
+    - Modernized APIs: Use `.withValues(alpha: x)` instead of deprecated `.withOpacity(x)`.
+    - Switches: Use `activeThumbColor` instead of `activeColor`.
+    - Flow Control: Explicit curly braces are required for all `if/else` and loop structures.
+- **Verification Commands**:
+    - Analysis: `cd notehub && flutter analyze`
+    - Testing: `cd notehub && flutter test`
+- **File Limits**: Direct document uploads are enforced at a 10MB limit; larger files are recommended to be shared via external links.
 
 ---
-*Analyzed and Documented by Jules, AI Software Engineer.*
+*Last Technical Audit: June 2026*
+*Documented by Jules, AI Software Engineer.*
