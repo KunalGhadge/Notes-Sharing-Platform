@@ -57,7 +57,9 @@ class DocumentController extends GetxController {
 
     for (var doc in response) {
       final profile = doc['profiles'];
-      if (profile == null) continue; // Skip docs with no profile data
+      if (profile == null) {
+        continue; // Skip docs with no profile data
+      }
 
       final List interactions = doc['interactions'] ?? [];
       final List bookmarks = doc['bookmarks'] ?? [];
@@ -99,7 +101,9 @@ class DocumentController extends GetxController {
 
   Future<void> toggleLike(DocumentModel doc) async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
 
     // Optimistic Update
     final wasLiked = doc.isLiked;
@@ -118,9 +122,10 @@ class DocumentController extends GetxController {
         await supabase
             .rpc('decrement_likes', params: {'doc_id': doc.documentId});
       } else {
-        if (doc.isDisliked)
+        if (doc.isDisliked) {
           await toggleDislike(
               doc); // Re-recursive call will handle its own optic
+        }
         await supabase.from('interactions').upsert(
             {'user_id': userId, 'document_id': doc.documentId, 'type': 'like'});
         await supabase
@@ -143,7 +148,9 @@ class DocumentController extends GetxController {
 
   Future<void> toggleDislike(DocumentModel doc) async {
     final userId = HiveBoxes.userId;
-    if (userId.isEmpty) return;
+    if (userId.isEmpty) {
+      return;
+    }
 
     // Optimistic Update
     final wasDisliked = doc.isDisliked;
@@ -162,7 +169,9 @@ class DocumentController extends GetxController {
         await supabase
             .rpc('decrement_dislikes', params: {'doc_id': doc.documentId});
       } else {
-        if (doc.isLiked) await toggleLike(doc);
+        if (doc.isLiked) {
+          await toggleLike(doc);
+        }
         await supabase.from('interactions').upsert({
           'user_id': userId,
           'document_id': doc.documentId,
@@ -266,11 +275,15 @@ class DocumentController extends GetxController {
           .select('user_id')
           .eq('id', docId)
           .maybeSingle();
-      if (docData == null) return;
+      if (docData == null) {
+        return;
+      }
 
       final receiverId = docData['user_id'];
       final senderId = HiveBoxes.userId;
-      if (receiverId == senderId) return;
+      if (receiverId == senderId) {
+        return;
+      }
 
       await supabase.from('notifications').insert({
         'receiver_id': receiverId,
@@ -283,7 +296,9 @@ class DocumentController extends GetxController {
 
   void openDocument(DocumentModel doc) async {
     if (doc.isExternal) {
-      if (doc.document == null) return;
+      if (doc.document == null) {
+        return;
+      }
       final uri = Uri.parse(doc.document!);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -308,7 +323,9 @@ class DocumentController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().update();
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Sync with home failed: \$e");
+    }
   }
 
   @override
