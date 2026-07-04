@@ -148,6 +148,71 @@ CREATE POLICY "Users can insert their own comments" ON public.comments FOR INSER
 DROP POLICY IF EXISTS "Users can view their own notifications" ON public.notifications;
 CREATE POLICY "Users can view their own notifications" ON public.notifications FOR SELECT USING (auth.uid() = receiver_id);
 
+-- 8. Functions for atomic counter updates
+CREATE OR REPLACE FUNCTION increment_likes(doc_id bigint)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = likes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_likes(doc_id bigint)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = GREATEST(0, likes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION increment_dislikes(doc_id bigint)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = dislikes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id bigint)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = GREATEST(0, dislikes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION increment_bookmarks(doc_id bigint)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = likes_count + 1 -- Reusing likes_count or add bookmarks_count if needed
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 9. Trigger for Admin Content Verification
+CREATE OR REPLACE FUNCTION ensure_official_permission()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.is_official = true AND NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND is_admin = true
+  ) THEN
+    RAISE EXCEPTION 'Only administrators can mark content as official.';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS check_official_permission ON public.documents;
+CREATE TRIGGER check_official_permission
+BEFORE INSERT OR UPDATE ON public.documents
+FOR EACH ROW EXECUTE FUNCTION ensure_official_permission();
+
 -- Enable Realtime (Idempotent check)
 DO $$
 BEGIN
