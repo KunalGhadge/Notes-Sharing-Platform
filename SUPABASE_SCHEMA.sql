@@ -128,7 +128,14 @@ CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (
+    auth.uid() = id
+    AND (
+      is_admin = (SELECT is_admin FROM public.profiles WHERE id = auth.uid())
+    )
+  );
 
 -- Documents: Public read, owner write
 DROP POLICY IF EXISTS "Documents are viewable by everyone" ON public.documents;
