@@ -52,7 +52,7 @@ The migration to Supabase has addressed critical legacy vulnerabilities through 
     - **Idempotent Schema**: `SUPABASE_SCHEMA.sql` uses `IF NOT EXISTS` and explicit `search_path` settings to ensure consistent and secure database deployments.
 
 ## 5. Development & QA
-- **Prerequisites**: Dart SDK ^3.5.4, Flutter 3.24+ (Stable).
+- **Prerequisites**: Dart SDK 3.6+ (Dart 3.5.4+ verified for modern API compatibility), Flutter 3.44.4+ (Stable).
 - **Compliance**: Adheres to a "Zero Warnings" policy. Always run `flutter analyze` and `flutter test` within the `notehub/` directory before submission.
 - **Android Support**: Target SDK 34, requires `MANAGE_EXTERNAL_STORAGE` and `INTERNET` permissions.
 

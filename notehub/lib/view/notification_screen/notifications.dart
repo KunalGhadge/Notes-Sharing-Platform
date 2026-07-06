@@ -52,7 +52,7 @@ class NotificationView extends StatelessWidget {
             return Container(
               color: notification.isRead
                   ? Colors.transparent
-                  : PrimaryColor.shade100.withOpacity(0.1),
+                  : PrimaryColor.shade100.withValues(alpha: 0.1),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(notification.senderProfile ==
