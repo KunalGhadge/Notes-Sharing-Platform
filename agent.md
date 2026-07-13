@@ -1,48 +1,54 @@
-# Developer Guide - Serious Study (formerly NoteHub)
+# Developer Guide & Maintenance Manual - Serious Study
 
-This document provides a comprehensive analysis of the Serious Study project from a developer's perspective. It documents the current state of the application after its migration from a legacy Django/MongoDB stack to a serverless **Supabase** architecture.
+This document serves as the primary technical manual for the **Serious Study** (formerly NoteHub) Android application. It provides a developer-perspective audit of the system's performance, design, and security architecture.
 
-## Project Overview
-Serious Study is a premium notes-sharing and academic networking platform for the Mumbai University student community. It features a Flutter frontend and a Supabase (PostgreSQL) backend.
+## 1. Performance & Architecture
+Serious Study is built on a high-performance, serverless architecture that prioritizes responsiveness and data integrity.
 
-## 1. Performance Analysis
-- **Reactive State Management**: Utilizing `GetX` for efficient state updates. Controllers (e.g., `DocumentController`, `ProfileController`) manage business logic independently from the UI.
-- **Local Persistent Storage**: `Hive` is used for high-performance NoSQL local caching. User profile metadata is stored in `userBox` (see `lib/core/helper/hive_boxes.dart`) to ensure immediate UI responsiveness upon app launch.
-- **Media Optimization**:
-    - **Caching**: `cached_network_image` is used throughout the app (e.g., in `HomeHeader`) to minimize network usage.
-    - **Compression**: `flutter_image_compress` is integrated into the upload pipeline to optimize asset sizes before they reach Supabase Storage.
-- **Database Scalability**:
-    - **Atomic Operations**: Critical interactions like `increment_likes` and `decrement_dislikes` are handled via PostgreSQL Functions (`RPCs`) defined in `SUPABASE_SCHEMA.sql`. This ensures data consistency and prevents race conditions.
-    - **Perceived Performance**: Shimmer placeholders are implemented in sections like `HomeDocumentSection` to provide smooth visual feedback during asynchronous data fetching.
+### 1.1 State Management (GetX)
+- **Reactive Flow**: The application utilizes `GetX` for reactive state management. Controllers (found in `lib/controller/`) are decoupled from the UI, allowing for efficient dependency injection and memory management.
+- **Optimistic UI**: Interactions like liking, disliking, or bookmarking documents (implemented in `DocumentController`) use optimistic updates. This ensures the UI reflects user actions instantly while the backend syncs asynchronously.
 
-## 2. Design & Architecture
-- **UI Paradigm**: The application implements **Material 3** with a **Glassmorphism** aesthetic.
-    - Semi-transparent overlays (e.g., `Colors.white.withValues(alpha: 0.15)`) and custom gradients (`AppGradients.premiumGradient`) are used to create a modern, layered look.
-    - Rebranded with a "Premium Deep Blue" theme (`#0D47A1`).
-- **Project Structure**:
-    - `lib/controller/`: Reactive logic using GetX.
-    - `lib/view/`: Modular UI components and screens.
-    - `lib/core/`: Centralized configurations like `AppMetaData` and theme definitions.
-- **Asset Integration**: High-quality vector graphics (`flutter_svg`) and `Lottie` animations are used for state feedback (e.g., empty search results).
+### 1.2 Data Persistence & Caching
+- **Hive (Local NoSQL)**: Used for high-speed local caching of user profiles and download metadata. This eliminates "cold start" latency for personal dashboard views.
+- **Media Caching**: `CachedNetworkImage` is used globally to minimize redundant network requests for thumbnails and profile pictures.
+- **File Management**: The `FileCaching` service (`lib/service/file_caching.dart`) manages document downloads using `Dio`, checking for local existence before initiating network transfers.
 
-## 3. Security Analysis & Migration Audit
-The current analysis confirms that the critical security vulnerabilities present in the legacy Django stack have been systematically addressed:
+### 1.3 Backend Optimization
+- **Batching**: The `HomeController` fetches documents in batches (limit 50) to optimize bandwidth and rendering performance.
+- **PostgreSQL RPCs**: Critical atomic operations (e.g., `increment_likes`, `decrement_dislikes`) are handled via Database RPCs. This prevents race conditions and ensures counter integrity across thousands of concurrent users.
+- **Sticky Sort**: The feed implements a custom sort algorithm that prioritizes 'Official' content while maintaining chronological order for peer-uploaded notes.
 
-- **Authentication**: Migrated from a custom session-less system to **Supabase Auth (JWT)**. Sessions are securely managed by the Supabase SDK.
-- **Password Security**: Passwords are no longer handled in plain text; they are managed by Supabase using industry-standard hashing (Argon2/Bcrypt).
-- **Authorization (RLS)**: **Row Level Security** is strictly enforced. Every table in `SUPABASE_SCHEMA.sql` has policies ensuring:
-    - **Profiles**: Only owners can `UPDATE`.
-    - **Documents**: Only owners can `INSERT` or `DELETE`.
-    - **Notifications/Bookmarks**: Private to the specific user.
-- **API Integrity**: By using `SECURITY DEFINER` on PostgreSQL functions, the app allows atomic updates to counters (like `likes_count`) while keeping the underlying table data protected from direct unauthorized manipulation.
-- **Secure File Access**: All documents and thumbnails in Supabase Storage are governed by policies, preventing unauthorized public access to private assets.
+## 2. Design & User Experience
+The application follows a modern **Material 3** aesthetic with a premium academic focus.
 
-## 4. Development & QA
-- **Prerequisites**: Flutter SDK ^3.5.4.
-- **Android Configuration**: The `build.gradle` is configured with `multiDexEnabled` and `coreLibraryDesugaring` to support the `flutter_local_notifications` plugin.
-- **Code Quality**:
-    - Run `flutter analyze` to verify linting compliance.
-    - Run `flutter test` to execute the test suite (e.g., `test/dummy_test.dart`).
+### 2.1 Aesthetic Identity
+- **Brand Color**: "Premium Deep Blue" (`#0D47A1`) is the primary theme color, selected to represent Mumbai University's academic integrity.
+- **Glassmorphism**: Applied to navigation bars and profile cards to create a layered, modern feel using semi-transparent overlays (`.withValues(alpha: ...)`).
+- **Typography**: "Plus Jakarta Sans" is used as the primary typeface for its readability and modern geometric look.
+
+### 2.2 UI Components
+- **Shimmer Effects**: Integrated into data-heavy screens to provide visual feedback during asynchronous loading.
+- **Lottie Animations**: Custom animations are used for empty states and success feedback (e.g., successful uploads).
+
+## 3. Security Analysis
+Security is baked into the database layer via **Supabase** and **PostgreSQL**.
+
+### 3.1 Authentication & Authorization
+- **JWT (JSON Web Tokens)**: Secure, stateless authentication managed by Supabase Auth.
+- **Row Level Security (RLS)**: Strictly enforced on every table.
+    - **Profiles**: `UPDATE` restricted to `auth.uid() = id`.
+    - **Documents**: Owners have `ALL` permissions; others have `SELECT` only.
+    - **Interaction Integrity**: Interactions are restricted to the current user, preventing unauthorized manipulation of other users' data.
+
+### 3.2 Database Triggers & RPCs
+- **Official Status**: Setting a document as `is_official` is restricted via backend logic to ensure only admins can verify content.
+- **Security Definer**: RPC functions use `SECURITY DEFINER` with an explicit `search_path = public` to prevent search-path hijacking while allowing controlled updates to protected tables like `documents`.
+
+## 4. Maintenance & QA
+- **Environment**: Requires Flutter SDK ^3.24+ and Dart SDK ^3.5.4.
+- **Code Quality**: Adheres to a "Zero Warnings" policy. Always verify changes with `cd notehub && flutter analyze`.
+- **Modernization**: Use `.withValues(alpha: ...)` instead of deprecated `.withOpacity()` and `activeThumbColor` for Switch widgets.
 
 ---
-*Analyzed and Documented by Jules, AI Software Engineer.*
+*Maintained by the Serious Study Developer Community.*
