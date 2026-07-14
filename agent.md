@@ -52,7 +52,7 @@ The project follows a clean, modular **MVC (Model-View-Controller)** pattern:
 - **`lib/service/`**: Dedicated handlers for specialized tasks like `FileCaching` and `NotificationService`.
 
 ## 5. Maintenance & QA
-- **Prerequisites**: Flutter SDK ^3.24 (Dart ^3.5.4).
+- **Prerequisites**: Flutter SDK ^3.41 (Dart ^3.11.0).
 - **Code Quality**:
     - Adheres to a "Zero Warnings" policy.
     - Linting verified via `flutter analyze`.
