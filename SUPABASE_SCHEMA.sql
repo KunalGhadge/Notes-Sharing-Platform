@@ -128,7 +128,9 @@ CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (is_admin = (SELECT is_admin FROM public.profiles WHERE id = auth.uid()));
 
 -- Documents: Public read, owner write
 DROP POLICY IF EXISTS "Documents are viewable by everyone" ON public.documents;
@@ -167,3 +169,42 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.comments;
   END IF;
 END $$;
+
+-- 8. Atomic Interaction Counters (RPC Functions)
+-- Use SECURITY DEFINER to allow users to update counts without direct table write access
+
+CREATE OR REPLACE FUNCTION increment_likes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = likes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_likes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET likes_count = GREATEST(0, likes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION increment_dislikes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = dislikes_count + 1
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_dislikes(doc_id BIGINT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.documents
+  SET dislikes_count = GREATEST(0, dislikes_count - 1)
+  WHERE id = doc_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
