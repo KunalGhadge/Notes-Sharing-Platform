@@ -94,12 +94,14 @@ class _CommentSectionState extends State<CommentSection> {
         ),
         const SizedBox(height: 24),
         Obx(() {
-          if (controller.isLoading.value)
+          if (controller.isLoading.value) {
             return const Center(child: CircularProgressIndicator());
-          if (controller.comments.isEmpty)
+          }
+          if (controller.comments.isEmpty) {
             return const Text(
                 "No comments yet. Be the first to start the discussion!",
                 style: TextStyle(color: Colors.grey));
+          }
 
           final rootComments =
               controller.comments.where((c) => c.parentId == null).toList();
